@@ -118,6 +118,21 @@ if everything one source told you were wrong:
 
 **Every network finding can be replayed.** Probes record each request and response (never tokens). `pz replay evidence/isolation-....json` feeds the recording back through the probe logic offline and checks the same findings come out. A reviewer can confirm a finding without access to your system, and a result edited by hand no longer matches its own recording. Model output varies between runs, so the agent probe asks each leak prompt three times by default.
 
+## Embedded mode: the probes inside your own tests
+
+No server, no port, no target file. Hand the probe your framework's test client and it calls your application in-process:
+
+```python
+from patient_zero.embedded import assert_isolated
+
+def test_tenants_cannot_read_each_other(client):
+    assert_isolated(client, token_a=TOKEN_A, token_b=TOKEN_B,
+                    resources=["/api/workspaces/ws_a/clients", "/api/workspaces/ws_a/notes"],
+                    canary="a string only tenant A's data contains")
+```
+
+It works with FastAPI, Starlette, httpx and requests-shaped clients, with Flask and Werkzeug test clients, and with any bare WSGI app. The test fails on a cross-tenant read, and also when no route could be tested at all. `assert_agent_contained` does the same for the agent probe.
+
 ## Try it on your own stack in ten seconds
 
 No target file, no running app. Point it at any directory with a Docker Compose file:
@@ -152,6 +167,8 @@ A customer asks for your pentest evidence. You send that one file and `proof.jso
 The Merkle tree and the Ed25519 implementation are standard library only, checked against the RFC 8032 test vectors. A key you generated proves the same key signed each seal, not who holds it: publish the public key somewhere you control, or have your assessor sign.
 
 ## The profile
+
+The full text is in [`docs/PROFILE.md`](docs/PROFILE.md), generated from the data file.
 
 [`patient_zero/data/controls.yaml`](patient_zero/data/controls.yaml) holds eight families. Levels are cumulative and declared per workspace.
 
@@ -240,13 +257,21 @@ Rules the tooling enforces:
 
 Want to try the probes by hand first? `pz demo --serve` runs the broken app on port 8099, and `pz demo --serve --patched` runs the fixed one.
 
+## No telemetry
+
+patient-zero collects nothing and phones nowhere. The only network traffic it ever creates goes to the `base_url` you put in the target file, and the demo stays on 127.0.0.1. A test in the suite fails if the demo opens a connection to anything but loopback.
+
 ## What this is not
 
 - **Not a HIPAA certification.** HHS does not issue or recognize one. This produces evidence for a customer or an external assessor.
 - **Not a NIST publication**, and not legal advice. Every HIPAA paragraph cited was checked to exist in eCFR on 2026-11-10; whether it is the right home for a control is the author's judgment. The SP 800-53 and CSF identifiers are unchecked.
-- **Not a pentest.** Nine probes touch eleven of 43 controls. The other 32 need a person, and so does the final call on those eleven.
+- **Not a pentest.** Nine probes touch 11 of 43 controls. The other 32 need a person, and so does the final call on those 11. [`docs/COVERAGE.md`](docs/COVERAGE.md) is generated from the code and lists every control.
 - **Not battle-tested.** Draft 0.1, one author, proven only against its own demo app. The agent probe plants one instruction per carrier in four dressings; current models shrug off naive injections, so a clean result says little, and the score reflects that. A model may also behave differently when it can tell it is being tested, which is why the markers look like ordinary words and the user agent is configurable.
 - **Not tamper-proof logging.** The hash chain shows edits. It cannot show a cut tail unless you anchor the head hash somewhere the app cannot write.
+
+## Things that do not work
+
+Every known limit is a file in [`known-gaps/things-that-do-not-work/`](known-gaps/things-that-do-not-work/), with a severity and what would close it. Fixed ones move to [`things-that-now-work/`](known-gaps/things-that-now-work/). If you find a new one, that directory is where it goes.
 
 ## Built from this month's Hacker News
 
@@ -273,6 +298,8 @@ patient-zero reuses ideas from the author's other open source security tools:
 - **[orbit-ir](https://github.com/joeyvictorino/orbit-ir)** (agent incident reconstruction): an agent's transcript is a claim, not a record, which is the whole of `pz probe claims`.
 
 The four method rules (predict before reading results, discard runs that never reached the target, bind results to an exact build, and check a replay against its recording) are adapted from the testing discipline described in the README of [bo2-mac](https://github.com/adrbn/bo2-mac), an unrelated recompilation project. No code was taken from it.
+
+Embedded mode, the generated coverage table and the `known-gaps` directory follow the way [aws-emulator](https://github.com/aws/aws-emulator) runs in-process for tests, publishes fidelity scores and tracks what does not work as files in the repository.
 
 ## Help wanted
 

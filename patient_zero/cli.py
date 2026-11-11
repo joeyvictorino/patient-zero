@@ -6,7 +6,20 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, assess, auditlog, bayes, hidden, html, phi, profile as profile_mod, replay as replay_mod, report, seal as seal_mod
+from . import (
+    __version__,
+    assess,
+    auditlog,
+    bayes,
+    coverage,
+    hidden,
+    html,
+    phi,
+    profile as profile_mod,
+    replay as replay_mod,
+    report,
+    seal as seal_mod,
+)
 from .probes import ProbeRefused, load_target, write_evidence
 from .probes import agent as agent_probe
 from .probes import claims as claims_probe
@@ -26,6 +39,9 @@ def _cmd_controls(args) -> int:
     if args.validate:
         print(f"profile {prof.version}: {len(prof.controls)} controls in {len(prof.families)} families, valid")
         return EXIT_OK
+    if args.markdown:
+        sys.stdout.write(coverage.profile_markdown(prof))
+        return EXIT_OK
     controls = prof.for_level(args.level) if args.level else prof.controls
     if args.family:
         controls = [c for c in controls if c.family == args.family.upper()]
@@ -35,6 +51,22 @@ def _cmd_controls(args) -> int:
         for c in controls:
             print(f"{c.id:<8} {c.min_level}  {c.statement}")
         print(f"\n{len(controls)} controls")
+    return EXIT_OK
+
+
+def _cmd_coverage(args) -> int:
+    prof = profile_mod.load(args.profile)
+    if args.markdown:
+        sys.stdout.write(coverage.markdown(prof))
+        return EXIT_OK
+    if args.json:
+        print(json.dumps({"summary": coverage.summary(prof), "controls": coverage.rows(prof)}, indent=2))
+        return EXIT_OK
+    for r in coverage.rows(prof):
+        print(f"{r['id']:<8} {r['support']:<26} {', '.join(r['probes'] + r['safeguards'])}")
+    s = coverage.summary(prof)
+    print(f"\n{s['probes']} probes touch {s['probed']} of {s['controls']} controls; {s['with_reference_code']} have reference code; "
+          f"{s['manual_only']} are manual only")
     return EXIT_OK
 
 
@@ -323,7 +355,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--family")
     p.add_argument("--json", action="store_true")
     p.add_argument("--validate", action="store_true", help="check the catalogue and exit")
+    p.add_argument("--markdown", action="store_true", help="the whole profile as a document")
     p.set_defaults(func=_cmd_controls)
+
+    p = sub.add_parser("coverage", help="which controls have a probe, reference code, or neither")
+    p.add_argument("--markdown", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_coverage)
 
     p = sub.add_parser("init", help="start an assessment file")
     p.add_argument("--product", required=True)

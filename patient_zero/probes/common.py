@@ -118,7 +118,7 @@ def load_target(path: str) -> Dict[str, Any]:
 def start(probe: str, controls: List[str], target: Dict[str, Any]) -> ProbeResult:
     """A result wired to the target's recording, build id and this probe's settings."""
     target["_tape"] = []  # a fresh list per run, so an earlier result keeps its own recording
-    config = {k: v for k, v in (target.get(probe) or {}).items()}
+    config = dict(target.get(probe) or {})
     result = ProbeResult(probe, controls, target["base_url"], authorization_ref=target.get("authorization_ref"),
                          build=(str(target["build"]) if target.get("build") is not None else None), config=config)
     result.exchanges = target["_tape"]
@@ -181,6 +181,14 @@ def request(
 
 
 def _send(target: Dict[str, Any], method: str, path: str, token: Optional[str], body: Any, timeout: float) -> Response:
+    if "_transport" in target:  # embedded mode: call the application in-process, no socket
+        headers = {"Accept": "application/json"}
+        if token:
+            headers[target.get("auth_header", "Authorization")] = f"{target.get('auth_scheme', 'Bearer')} {token}".strip()
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        status, text = target["_transport"](method, path, headers, body)
+        return Response(int(status), text, {})
     url = target["base_url"] + path
     # Honest by default. A target that treats known test traffic differently hides problems,
     # so set `user_agent` in the target file to match your real clients when that matters.
