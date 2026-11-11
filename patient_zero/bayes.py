@@ -107,12 +107,19 @@ def _from_log_odds(x: float) -> float:
     return _clamp(1 / (1 + math.exp(-x)))
 
 
+def source_of(obs: Dict[str, Any]) -> str:
+    """Who or what stands behind an observation: a probe, or a named person."""
+    if obs["kind"] == "probe":
+        return f"the {obs['probe']} probe"
+    return f"{obs.get('ref') or 'unnamed assessor'} ({obs.get('by', 'self')})"
+
+
 def posterior(model: Dict[str, Any], entry: Dict[str, Any], control_id: str, today: Optional[date] = None,
-              skip: Optional[str] = None) -> float:
+              skip: Optional[str] = None, without_source: Optional[str] = None) -> float:
     today = today or date.today()
     total = _log_odds(model["prior"])
     for key, obs in current_observations(entry).items():
-        if key == skip:
+        if key == skip or (without_source is not None and source_of(obs) == without_source):
             continue
         if_holds, if_broken = likelihoods(model, obs, control_id)
         total += _weight(model, obs, today) * math.log(_clamp(if_holds) / _clamp(if_broken))
@@ -201,6 +208,34 @@ def next_actions(assessment: Dict[str, Any], profile: Profile, model: Dict[str, 
                                 "bits_per_cost": gain / cost})
     actions.sort(key=lambda a: a["bits_per_cost"], reverse=True)
     return actions[:top]
+
+
+def fragility(assessment: Dict[str, Any], profile: Profile, model: Dict[str, Any],
+              today: Optional[date] = None) -> List[Dict[str, Any]]:
+    """Leave one source out. If everything a single source told you were wrong,
+    how much of the picture goes with it?
+
+    Controls are scored as independent, but evidence often is not: one person
+    signing twenty controls is one point of failure, not twenty. This ranks
+    sources by how much expected-broken rises when their evidence is discarded.
+    """
+    today = today or date.today()
+    controls = [c for c in profile.for_level(assessment["level"])
+                if assessment["controls"].get(c.id, {}).get("status") != "not_applicable"]
+    sources: Dict[str, List[str]] = {}
+    for c in controls:
+        for obs in current_observations(assessment["controls"].get(c.id, {})).values():
+            if obs.get("outcome") in ("clean", "pass"):  # only evidence that props belief up
+                sources.setdefault(source_of(obs), []).append(c.id)
+    rows = []
+    for source, supported in sources.items():
+        lost = 0.0
+        for cid in supported:
+            entry = assessment["controls"][cid]
+            lost += posterior(model, entry, cid, today) - posterior(model, entry, cid, today, without_source=source)
+        rows.append({"source": source, "controls": sorted(set(supported)), "belief_lost": lost})
+    rows.sort(key=lambda r: r["belief_lost"], reverse=True)
+    return rows
 
 
 def bar(p: float, width: int = 20) -> str:

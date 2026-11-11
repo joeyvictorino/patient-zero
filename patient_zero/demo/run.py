@@ -3,19 +3,33 @@ from __future__ import annotations
 
 import os
 import tempfile
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 import yaml
 
-from .. import assess, bayes, profile as profile_mod
+from .. import assess, bayes, profile as profile_mod, seal as seal_mod
+from ..policy import ActionGate, Policy, Proposal
 from ..auditlog import AuditLog
-from ..probes import agent, isolation, offline, write_evidence
+from ..probes import agent, isolation, offline, stack, write_evidence
 from .leaky_clinic import make_server, target_for
 
 REGISTER = {"endpoints": [
     {"host": "api.model-vendor.example", "purpose": "LLM inference", "baa": True,
      "training_on_phi": "prohibited", "retention": "0 days"},
 ]}
+
+
+MESSY_STACK = {"services": {
+    "ollama": {"image": "ollama/ollama:latest", "ports": ["11434:11434"], "environment": ["OLLAMA_ORIGINS=*"]},
+    "qdrant": {"image": "qdrant/qdrant", "ports": ["6333:6333"]},
+    "app": {"image": "leaky-clinic:dev", "ports": ["8080:8080"]},
+}}
+HARDENED_STACK = {"services": {
+    "ollama": {"image": "ollama/ollama:0.12.3"},
+    "qdrant": {"image": "qdrant/qdrant:v1.15.0"},
+    "app": {"image": "leaky-clinic:1.0.1", "ports": ["127.0.0.1:8080:8080"]},
+}}
 
 
 def _audit_log(path: str, tamper: bool) -> str:
@@ -45,11 +59,16 @@ def _investigate(label: str, vulnerable: bool, data: Dict[str, Any], workdir: st
         log_path = os.path.join(workdir, f"audit-{label}.jsonl")
         head = _audit_log(log_path, tamper=vulnerable)
 
+        stack_dir = os.path.join(workdir, f"stack-{label}")
+        os.makedirs(stack_dir, exist_ok=True)
+        with open(os.path.join(stack_dir, "docker-compose.yml"), "w", encoding="utf-8") as fh:
+            yaml.safe_dump(MESSY_STACK if vulnerable else HARDENED_STACK, fh)
+
         out(f"\n== {label} build ==")
         runs = [isolation.run(target), agent.run(target), offline.run_egress(target),
-                offline.run_log(log_path, head, target_name="Leaky Clinic audit log")]
+                offline.run_log(log_path, head, target_name="Leaky Clinic audit log"), stack.run(stack_dir)]
         for result in runs:
-            path = write_evidence(result, os.path.join(workdir, "evidence"))
+            path = os.path.relpath(write_evidence(result, os.path.join(workdir, "evidence")), workdir)
             touched += assess.apply_probe(data, result, path)
             verdict = "clean" if result.clean else f"{len(result.findings)} finding(s)"
             out(f"  {result.probe:<10} {result.checks:>2} checks  {verdict}")
@@ -59,6 +78,39 @@ def _investigate(label: str, vulnerable: bool, data: Dict[str, Any], workdir: st
         server.shutdown()
         server.server_close()
     return sorted(set(touched))
+
+
+def _gate_demo(out) -> None:
+    policy = Policy(
+        version="2026.1",
+        allowed_capabilities=frozenset({"record.read", "email.send", "http.external"}),
+        allowed_outputs=frozenset({"appointment_count", "next_visit"}),
+        write_capabilities=frozenset({"email.send"}),
+        confirm_actions=frozenset({"email.send"}),
+        dangerous_combinations=(frozenset({"record.read", "http.external"}),),
+    )
+    gate = ActionGate(policy, workspace="ws_a", user_capabilities=lambda user: {"record.read", "email.send"},
+                      agent_write_grants=lambda agent: {"email.send"})
+    soon = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+
+    def propose(action, capabilities, nonce, outputs=("appointment_count",)):
+        return Proposal(agent="assistant-1", user="dr.a", workspace="ws_a", action=action,
+                        capabilities=frozenset(capabilities), outputs=frozenset(outputs), nonce=nonce,
+                        expires_at=soon, policy_version="2026.1", recipient="patient@example.com", content="Reminder")
+
+    summary = propose("record.summarize", {"record.read"}, "n1")
+    cases = [
+        ("summarize a record", summary),
+        ("same proposal again", summary),
+        ("read a record and call an outside URL", propose("record.forward", {"record.read", "http.external"}, "n2")),
+        ("email a patient, no human confirmation", propose("email.send", {"email.send"}, "n3")),
+        ("return the full note text", propose("record.summarize", {"record.read"}, "n4", outputs=("note_text",))),
+    ]
+    for label, proposal in cases:
+        decision = gate.evaluate(proposal)
+        out(f"  {label:<40} {'ALLOW' if decision.allowed else 'DENY '}  {decision.reason}")
+    released = gate.release(summary, {"appointment_count": 3, "note_text": "synthetic note", "ssn": "000-00-0000"})
+    out(f"  agent returned 3 fields, {len(released)} crossed: {sorted(released)}")
 
 
 def _belief_lines(data, prof, model, touched) -> List[str]:
@@ -86,7 +138,26 @@ def run(out=print) -> int:
         for line in _belief_lines(data, prof, model, touched):
             out(line)
 
-    out("\n  Clean probes move belief up but never to a pass. A person still has to sign each control.")
+        out("\n  Clean probes move belief up but never to a pass. A person still has to sign each control.")
+
+        out("\n== agent action gate: the agent proposes, a fixed policy decides ==")
+        _gate_demo(out)
+
+        out("\n== seal the evidence ==")
+        a_path, key, sealed = (os.path.join(workdir, n) for n in ("assessment.yaml", "demo.key", "seal.json"))
+        assess.save(data, a_path)
+        seal_mod.keygen(key)
+        head = seal_mod.seal(a_path, key, sealed, signer_name="demo")["head"]
+        out(f"  {head['item_count']} files under Merkle root {head['merkle_root'][:24]}..., signed with Ed25519")
+        out("  verify: " + ("ok" if not seal_mod.verify_seal(sealed) else "FAILED"))
+        victim = os.path.join(workdir, [i for i in seal_mod.collect(a_path, workdir) if i.startswith("evidence")][0])
+        with open(victim, "r+", encoding="utf-8") as fh:
+            text = fh.read()
+            fh.seek(0)
+            fh.write(text.replace('"clean": false', '"clean": true', 1))
+        problems = seal_mod.verify_seal(sealed)
+        out("  edit one evidence file to say clean instead of finding, verify again: "
+            + (problems[0] if problems else "NOT DETECTED"))
     out("\n== what to test next (most uncertainty removed per unit of effort) ==")
     for a in bayes.next_actions(data, prof, model, top=5):
         out(f"  {a['control']:<8} {a['action']:<38} {a['bits']:.2f} bits")

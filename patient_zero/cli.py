@@ -6,9 +6,11 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, report
+from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, report, seal as seal_mod
 from .probes import ProbeRefused, load_target, write_evidence
 from .probes import agent as agent_probe
+from .probes import claims as claims_probe
+from .probes import stack as stack_probe
 from .probes import isolation as isolation_probe
 from .probes import offline as offline_probe
 from .probes import tls as tls_probe
@@ -72,6 +74,13 @@ def _cmd_probe(args) -> int:
             print("pz probe log needs --file", file=sys.stderr)
             return EXIT_USAGE
         return _finish_probe(offline_probe.run_log(args.file, args.expected_head), args)
+    if args.name == "stack":
+        return _finish_probe(stack_probe.run(args.path), args)
+    if args.name == "claims":
+        if not args.file or not args.transcript:
+            print("pz probe claims needs --transcript and --file", file=sys.stderr)
+            return EXIT_USAGE
+        return _finish_probe(claims_probe.run(args.transcript, args.file), args)
     if not args.config:
         print(f"pz probe {args.name} needs --config target.yaml", file=sys.stderr)
         return EXIT_USAGE
@@ -155,6 +164,68 @@ def _cmd_next(args) -> int:
     return EXIT_OK
 
 
+def _cmd_fragile(args) -> int:
+    prof = profile_mod.load(args.profile)
+    data = assess.load(args.assessment)
+    rows = bayes.fragility(data, prof, bayes.load_model(args.model))
+    if args.json:
+        print(json.dumps(rows, indent=2))
+        return EXIT_OK
+    if not rows:
+        print("no supporting evidence recorded yet")
+        return EXIT_OK
+    print("if everything one source told you were wrong:")
+    for r in rows:
+        print(f"  {r['source']:<34} props up {len(r['controls']):>2} control(s), {r['belief_lost']:.1f} more expected broken")
+    return EXIT_OK
+
+
+def _cmd_keygen(args) -> int:
+    public = seal_mod.keygen(args.output)
+    print(f"private seed written to {args.output} (keep it out of the repo)")
+    print(f"public key: {public}")
+    return EXIT_OK
+
+
+def _cmd_seal(args) -> int:
+    document = seal_mod.seal(args.assessment, args.key, args.output, signer_name=args.signer or "")
+    head = document["head"]
+    print(f"sealed {head['item_count']} files  root {head['merkle_root']}")
+    print(f"signed by {head['signer']['public_key']}" + (f"  follows {head['previous_root'][:16]}..." if head["previous_root"] else ""))
+    print(f"wrote {args.output}")
+    return EXIT_OK
+
+
+def _report_errors(errors, ok_message) -> int:
+    if errors:
+        for e in errors:
+            print(f"FAILED: {e}")
+        return EXIT_FINDINGS
+    print(ok_message)
+    return EXIT_OK
+
+
+def _cmd_verify(args) -> int:
+    errors = seal_mod.verify_seal(args.seal, expect_public_key=args.public_key)
+    return _report_errors(errors, "VERIFIED: signature valid, Merkle root matches, every file unchanged")
+
+
+def _cmd_prove(args) -> int:
+    proof = seal_mod.prove(args.seal, args.file)
+    with open(args.output, "w", encoding="utf-8") as fh:
+        json.dump(proof, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+    print(f"wrote {args.output}: proves {args.file} is one of {proof['head']['item_count']} sealed files, reveals no others")
+    return EXIT_OK
+
+
+def _cmd_verify_proof(args) -> int:
+    with open(args.proof, "r", encoding="utf-8") as fh:
+        proof = json.load(fh)
+    errors = seal_mod.verify_proof(proof, args.file, expect_public_key=args.public_key)
+    return _report_errors(errors, "VERIFIED: this file is part of the signed assessment")
+
+
 def _cmd_demo(args) -> int:
     if args.serve:
         from .demo.leaky_clinic import serve
@@ -197,9 +268,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=_cmd_set)
 
     p = sub.add_parser("probe", help="run a probe and write evidence")
-    p.add_argument("name", choices=["isolation", "agent", "egress", "tls", "log"])
-    p.add_argument("--config", help="target.yaml (not needed for log)")
-    p.add_argument("--file", help="audit log file (log probe)")
+    p.add_argument("name", choices=["isolation", "agent", "egress", "tls", "log", "stack", "claims"])
+    p.add_argument("--config", help="target.yaml (not needed for log, stack or claims)")
+    p.add_argument("--file", help="audit log file (log and claims probes)")
+    p.add_argument("--transcript", help="agent transcript, JSON Lines (claims probe)")
+    p.add_argument("--path", default=".", help="directory or compose file (stack probe)")
     p.add_argument("--expected-head", help="anchored head hash (log probe)")
     p.add_argument("-a", "--assessment", help="assessment file to update")
     p.add_argument("--evidence-dir", default="evidence")
@@ -236,6 +309,39 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_next)
 
+    p = sub.add_parser("fragile", help="which single source of evidence the picture leans on most")
+    p.add_argument("assessment", nargs="?", default="assessment.yaml")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_fragile)
+
+    p = sub.add_parser("keygen", help="create an Ed25519 signing key")
+    p.add_argument("-o", "--output", default="pz.key")
+    p.set_defaults(func=_cmd_keygen)
+
+    p = sub.add_parser("seal", help="sign a Merkle root over the assessment and its evidence")
+    p.add_argument("assessment", nargs="?", default="assessment.yaml")
+    p.add_argument("--key", default="pz.key")
+    p.add_argument("--signer", help="name to record beside the public key")
+    p.add_argument("-o", "--output", default="seal.json")
+    p.set_defaults(func=_cmd_seal)
+
+    p = sub.add_parser("verify", help="verify a seal and every file under it")
+    p.add_argument("seal", nargs="?", default="seal.json")
+    p.add_argument("--public-key", help="require this signer")
+    p.set_defaults(func=_cmd_verify)
+
+    p = sub.add_parser("prove", help="prove one evidence file belongs to a seal without revealing the rest")
+    p.add_argument("file")
+    p.add_argument("--seal", default="seal.json")
+    p.add_argument("-o", "--output", default="proof.json")
+    p.set_defaults(func=_cmd_prove)
+
+    p = sub.add_parser("verify-proof", help="check a single-file proof")
+    p.add_argument("proof")
+    p.add_argument("file")
+    p.add_argument("--public-key", help="require this signer")
+    p.set_defaults(func=_cmd_verify_proof)
+
     p = sub.add_parser("demo", help="investigate the bundled Leaky Clinic app, offline")
     p.add_argument("--serve", action="store_true", help="just run the demo app so you can probe it yourself")
     p.add_argument("--patched", action="store_true", help="with --serve, run the patched build")
@@ -251,7 +357,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     except ProbeRefused as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return EXIT_USAGE
-    except (FileNotFoundError, KeyError, ValueError) as exc:
+    except (FileExistsError, FileNotFoundError, KeyError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_USAGE
 

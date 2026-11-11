@@ -14,6 +14,8 @@ finding_if_broken: 0.9     # P(a reported finding is real | control broken), use
 detection:                 # chance that one check catches a break it is able to see
   default: 0.15
   egress: 0.4
+  stack: 0.5
+  claims: 0.3
   tls: 0.9
   log: 0.9
 coverage:                  # share of the control a probe can see at all
@@ -22,6 +24,8 @@ coverage:                  # share of the control a probe can see at all
   egress: {TRUST-1: 0.5, TRUST-2: 0.7}
   tls: {BASE-2: 0.4}
   log: {LOG-2: 0.6}
+  stack: {GATE-3: 0.3}       # static compose review sees exposure, not access control
+  claims: {LOG-1: 0.4, AGENT-1: 0.4}
 typical_checks:            # assumed size of a full probe run, for ranking what to do next
   default: 10
   tls: 1                   # one handshake answers the question

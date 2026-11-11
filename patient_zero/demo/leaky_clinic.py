@@ -12,7 +12,8 @@ CANARY = "PZ-CANARY-A-7f3a"
 TOKENS = {"tok-a": "ws_a", "tok-b": "ws_b"}
 
 
-def make_server(vulnerable: bool):
+def make_server(vulnerable: bool, port: int = 0, start: bool = True):
+    """Build the app on 127.0.0.1. Port 0 picks a free one. `start` runs it in a daemon thread."""
     data = {
         "ws_a": {"clients": [{"name": "Synthetic Person", "note": CANARY}], "notes": []},
         "ws_b": {"clients": [{"name": "Other Synthetic"}], "notes": []},
@@ -75,13 +76,13 @@ def make_server(vulnerable: bool):
                 return self._send(200, {"reply": json.dumps([data[w]["clients"] for w in scope])})
             return self._send(404, {"error": "not found"})
 
-    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    if start:
+        threading.Thread(target=server.serve_forever, daemon=True).start()
     return server
 
 
-def target_for(server, tmp_path=None):
+def target_for(server):
     target = {
         "authorized": True,
         "authorization_ref": "unit test",
@@ -107,12 +108,7 @@ def target_for(server, tmp_path=None):
 
 def serve(port: int = 8099, vulnerable: bool = True) -> None:
     """Run the demo app in the foreground so you can point your own tools at it."""
-    import time
-
-    server = make_server(vulnerable)
-    server.shutdown()
-    server.server_close()
-    server = ThreadingHTTPServer(("127.0.0.1", port), server.RequestHandlerClass)
+    server = make_server(vulnerable, port=port, start=False)
     mode = "vulnerable" if vulnerable else "patched"
     print(f"Leaky Clinic ({mode}) on http://127.0.0.1:{port}  tokens: tok-a (ws_a), tok-b (ws_b)  Ctrl-C to stop")
     try:
@@ -121,4 +117,3 @@ def serve(port: int = 8099, vulnerable: bool = True) -> None:
         pass
     finally:
         server.server_close()
-        time.sleep(0)

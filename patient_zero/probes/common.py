@@ -114,7 +114,7 @@ def tenant_token(target: Dict[str, Any], name: str) -> str:
     try:
         return resolve_token(target["tenants"][name]["token"])  # type: ignore[return-value]
     except (KeyError, TypeError):
-        raise ProbeRefused(f"target file needs tenants.{name}.token")
+        raise ProbeRefused(f"target file needs tenants.{name}.token") from None
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):

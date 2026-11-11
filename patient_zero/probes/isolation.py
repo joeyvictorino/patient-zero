@@ -45,14 +45,22 @@ def run(target: Dict[str, Any]) -> ProbeResult:
         for who, token in (("another tenant", token_b), ("an anonymous caller", None)):
             other = request(target, method, path, token, body)
             result.tick("GATE-3", "TEST-1")
-            if canary and canary in other.text:
+            leaked = bool(canary) and canary in other.text
+            exposed = other.ok and not (canary and canary in owner.text)
+            if leaked or exposed:
+                # A finding is a theory until it reproduces. Ask again before reporting it.
+                again = request(target, method, path, token, body)
+                if not ((leaked and canary in again.text) or (exposed and not leaked and again.ok)):
+                    result.inconclusive.append(f"{label}: a response to {who} looked wrong once and did not reproduce")
+                    continue
+            if leaked:
                 result.add("GATE-3", "critical", f"{label} returned tenant A's data to {who}",
-                           f"status {other.status}; canary found in the response body")
+                           f"status {other.status}; canary found in the response body; reproduced")
             elif other.ok:
                 if canary and canary in owner.text:
                     result.inconclusive.append(
                         f"{label}: {who} got {other.status} without the canary; confirm the response holds none of tenant A's data")
                 else:
                     result.add("GATE-3", "high", f"{label} answered {who} with {other.status}",
-                               "expected 401, 403 or 404 for a resource owned by tenant A")
+                               "expected 401, 403 or 404 for a resource owned by tenant A; reproduced")
     return result

@@ -7,3 +7,5 @@ dist/
 evidence/
 assessment.yaml
 target.yaml
+*.key
+proof.json
