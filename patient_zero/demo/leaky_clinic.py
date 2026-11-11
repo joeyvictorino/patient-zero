@@ -1,4 +1,8 @@
-"""A tiny multi-tenant app with an 'agent', in a vulnerable and a fixed mode. Test fixture only."""
+"""Leaky Clinic: a tiny multi-tenant app with an "agent", in a vulnerable and a patched build.
+
+It binds to 127.0.0.1 only and holds synthetic data. It exists so the probes
+have something to find, in the tests and in `pz demo`.
+"""
 import json
 import re
 import threading
@@ -99,3 +103,22 @@ def target_for(server, tmp_path=None):
         },
     }
     return target
+
+
+def serve(port: int = 8099, vulnerable: bool = True) -> None:
+    """Run the demo app in the foreground so you can point your own tools at it."""
+    import time
+
+    server = make_server(vulnerable)
+    server.shutdown()
+    server.server_close()
+    server = ThreadingHTTPServer(("127.0.0.1", port), server.RequestHandlerClass)
+    mode = "vulnerable" if vulnerable else "patched"
+    print(f"Leaky Clinic ({mode}) on http://127.0.0.1:{port}  tokens: tok-a (ws_a), tok-b (ws_b)  Ctrl-C to stop")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+        time.sleep(0)

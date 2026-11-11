@@ -3,7 +3,7 @@ import json
 import pytest
 import yaml
 
-from fake_target import target_for
+from patient_zero.demo.leaky_clinic import target_for
 from patient_zero import assess, profile, report
 from patient_zero.auditlog import AuditLog
 from patient_zero.cli import main

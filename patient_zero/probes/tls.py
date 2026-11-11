@@ -36,6 +36,7 @@ def run(target: Dict[str, Any]) -> ProbeResult:
     except (ssl.SSLError, OSError) as exc:
         result.inconclusive.append(f"could not complete a TLS handshake: {exc}")
         return result
+    result.checks_for["BASE-2"] = 1
     if version in _WEAK:
         result.add("BASE-2", "high", f"Server negotiated {version}", "TLS 1.2 or later is required")
 

@@ -3,9 +3,8 @@ import sys
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(__file__))
 
-from fake_target import make_server  # noqa: E402
+from patient_zero.demo.leaky_clinic import make_server  # noqa: E402
 
 
 @pytest.fixture

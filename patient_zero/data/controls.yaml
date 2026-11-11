@@ -1,7 +1,12 @@
 # Open PHI Safeguard Profile for AI Applications
-# Draft 0.1. Mappings are first-pass and unverified against source text.
+# Draft 0.1.
+# HIPAA: every cited paragraph was checked on the date below to exist in eCFR
+# (45 CFR Part 164) under a heading on the stated topic. Whether a paragraph is
+# the right home for a control is the author's judgment, not a legal opinion.
+# SP 800-53 Rev. 5 and CSF 2.0 identifiers have not been checked against source.
 version: "0.1"
 status: draft
+hipaa_citations_checked: "2026-11-10"
 mappings_verified: false
 
 levels:

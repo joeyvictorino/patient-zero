@@ -26,7 +26,10 @@ def run_egress(target: Dict[str, Any]) -> ProbeResult:
     with open(_resolve(target, cfg["observed"]), "r", encoding="utf-8") as fh:
         observed = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
     result = ProbeResult("egress", ["TRUST-1", "TRUST-2"], target["base_url"], authorization_ref=target.get("authorization_ref"))
-    result.checks = len(set(observed))
+    for _ in set(observed):
+        result.tick("TRUST-2")
+    for _ in register:
+        result.tick("TRUST-1")
     if not observed:
         result.inconclusive.append("observed host list is empty")
     for ep in register:
@@ -41,6 +44,7 @@ def run_log(path: str, expected_head: Optional[str] = None, target_name: str = "
     result = ProbeResult("log", ["LOG-2"], target_name)
     outcome = auditlog.verify(path, expected_head)
     result.checks = outcome.entries
+    result.checks_for["LOG-2"] = 1 if (outcome.ok and expected_head) or not outcome.ok else 0
     if not outcome.ok:
         result.add("LOG-2", "critical", "Audit log failed verification", outcome.error or "")
     elif expected_head is None:

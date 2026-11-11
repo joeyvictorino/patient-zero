@@ -35,7 +35,7 @@ def run(target: Dict[str, Any]) -> ProbeResult:
         label = f"{method.upper()} {path}"
 
         owner = request(target, method, path, token_a, body)
-        result.checks += 1
+        result.checks += 1  # setup check; proves nothing about isolation
         if not owner.ok:
             result.inconclusive.append(f"{label}: owner request returned {owner.status}; cannot test this route")
             continue
@@ -44,7 +44,7 @@ def run(target: Dict[str, Any]) -> ProbeResult:
 
         for who, token in (("another tenant", token_b), ("an anonymous caller", None)):
             other = request(target, method, path, token, body)
-            result.checks += 1
+            result.tick("GATE-3", "TEST-1")
             if canary and canary in other.text:
                 result.add("GATE-3", "critical", f"{label} returned tenant A's data to {who}",
                            f"status {other.status}; canary found in the response body")

@@ -1,0 +1,37 @@
+# Assumptions behind `pz belief` and `pz next`.
+# None of these numbers are measured. They are stated guesses, written down so
+# you can argue with them and change them. Pass your own file with --model.
+
+prior: 0.5                 # P(control holds) before any evidence
+half_life_days: 180        # evidence loses half its weight every 180 days
+
+# Probe evidence -------------------------------------------------------------
+false_positive: 0.02       # P(probe reports a finding | control holds)
+finding_if_broken: 0.9     # P(a reported finding is real | control broken), used when a finding is seen
+
+# A clean probe run only means something if the probe could have caught a break.
+# power = coverage * (1 - (1 - detection) ^ checks)
+detection:                 # chance that one check catches a break it is able to see
+  default: 0.15
+  egress: 0.4
+  tls: 0.9
+  log: 0.9
+coverage:                  # share of the control a probe can see at all
+  isolation: {GATE-3: 0.6, TEST-1: 0.3}
+  agent: {MEM-1: 0.6, AGENT-4: 0.4}
+  egress: {TRUST-1: 0.5, TRUST-2: 0.7}
+  tls: {BASE-2: 0.4}
+  log: {LOG-2: 0.6}
+typical_checks:            # assumed size of a full probe run, for ranking what to do next
+  default: 10
+  tls: 1                   # one handshake answers the question
+  log: 1                   # one verification answers the question
+
+# Human evidence -------------------------------------------------------------
+attestation:               # someone reviewed evidence and recorded a pass
+  self: {if_holds: 0.9, if_broken: 0.3}
+  independent: {if_holds: 0.9, if_broken: 0.08}
+assessor_fail: {if_holds: 0.05, if_broken: 0.9}
+
+# Relative cost of getting each kind of evidence, for ranking only.
+costs: {probe: 1, self: 3, independent: 8}

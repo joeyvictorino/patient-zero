@@ -27,6 +27,7 @@ class Profile:
     levels: Dict[str, dict]
     families: Dict[str, dict]
     controls: List[Control]
+    hipaa_citations_checked: Optional[str] = None
 
     def get(self, control_id: str) -> Control:
         for c in self.controls:
@@ -59,6 +60,7 @@ def load(path: Optional[str] = None) -> Profile:
         levels=raw["levels"],
         families=raw["families"],
         controls=[Control(**c) for c in raw["controls"]],
+        hipaa_citations_checked=raw.get("hipaa_citations_checked"),
     )
     errors = validate(profile)
     if errors:

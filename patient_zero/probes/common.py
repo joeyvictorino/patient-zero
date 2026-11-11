@@ -32,6 +32,7 @@ class ProbeResult:
     target: str
     started: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat(timespec="seconds"))
     checks: int = 0
+    checks_for: Dict[str, int] = field(default_factory=dict)
     findings: List[Finding] = field(default_factory=list)
     inconclusive: List[str] = field(default_factory=list)
     authorization_ref: Optional[str] = None
@@ -40,8 +41,22 @@ class ProbeResult:
     def clean(self) -> bool:
         return not self.findings
 
+    def tick(self, *controls: str) -> None:
+        """Count one check, and credit it to the controls it can speak to."""
+        self.checks += 1
+        for control in controls:
+            self.checks_for[control] = self.checks_for.get(control, 0) + 1
+
     def add(self, control: str, severity: str, title: str, detail: str = "") -> None:
         self.findings.append(Finding(control, severity, title, detail))
+
+    def grouped(self) -> List[str]:
+        """Findings as display lines, with repeats collapsed."""
+        counts: Dict[tuple, int] = {}
+        for f in self.findings:
+            key = (f.severity.upper(), f.control, f.title)
+            counts[key] = counts.get(key, 0) + 1
+        return [f"[{sev}] {control}: {title}" + (f" (x{n})" if n > 1 else "") for (sev, control, title), n in counts.items()]
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)

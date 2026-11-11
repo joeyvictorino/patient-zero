@@ -73,6 +73,9 @@ def render(assessment: Dict[str, Any], profile: Profile) -> str:
         "Automated probes can fail a control but cannot pass one. Every pass was recorded by a person with evidence attached.",
     ]
     if not profile.mappings_verified:
-        lines.append("The HIPAA, SP 800-53 and CSF mappings in this profile version are first-pass and have not been verified against source text.")
+        checked = (f"HIPAA citations were checked to exist in eCFR on {profile.hipaa_citations_checked}; "
+                   if profile.hipaa_citations_checked else "")
+        lines.append(f"Mappings are first-pass. {checked}SP 800-53 and CSF identifiers are unchecked, "
+                     "and the fit of every mapping is the author's judgment, not a legal opinion.")
     lines.append("")
     return "\n".join(lines)

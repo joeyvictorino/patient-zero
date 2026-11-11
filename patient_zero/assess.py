@@ -24,7 +24,7 @@ def new(product: str, level: str, profile: Profile) -> Dict[str, Any]:
         "profile_version": profile.version,
         "created": date.today().isoformat(),
         "controls": {
-            c.id: {"status": "not_assessed", "source": None, "note": "", "evidence": []}
+            c.id: {"status": "not_assessed", "source": None, "note": "", "evidence": [], "observations": []}
             for c in profile.for_level(level)
         },
     }
@@ -50,6 +50,7 @@ def set_status(
     note: str = "",
     evidence: Optional[List[str]] = None,
     assessor: str = "assessor",
+    independent: bool = False,
 ) -> None:
     if status not in STATUSES:
         raise ValueError(f"status must be one of {STATUSES}")
@@ -67,6 +68,15 @@ def set_status(
     for item in evidence or []:
         if item not in entry["evidence"]:
             entry["evidence"].append(item)
+    if status in ("pass", "fail"):
+        # The ledger behind `pz belief`: who judged, how, and when.
+        entry.setdefault("observations", []).append({
+            "kind": "attestation",
+            "by": "independent" if independent else "self",
+            "outcome": status,
+            "date": date.today().isoformat(),
+            "ref": assessor,
+        })
 
 
 def apply_probe(assessment: Dict[str, Any], result: ProbeResult, evidence_path: str) -> List[str]:
@@ -86,6 +96,14 @@ def apply_probe(assessment: Dict[str, Any], result: ProbeResult, evidence_path: 
         touched.append(control_id)
         if evidence_path not in entry["evidence"]:
             entry["evidence"].append(evidence_path)
+        entry.setdefault("observations", []).append({
+            "kind": "probe",
+            "probe": result.probe,
+            "outcome": "finding" if control_id in failed else "clean",
+            "checks": int(result.checks_for.get(control_id, 0)),
+            "date": date.today().isoformat(),
+            "ref": evidence_path,
+        })
         if control_id in failed:
             titles = [f.title for f in result.findings if f.control == control_id]
             entry.update(status="fail", source=source, note="; ".join(titles), updated=date.today().isoformat())

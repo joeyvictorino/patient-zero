@@ -6,7 +6,7 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, assess, auditlog, phi, profile as profile_mod, report
+from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, report
 from .probes import ProbeRefused, load_target, write_evidence
 from .probes import agent as agent_probe
 from .probes import isolation as isolation_probe
@@ -43,7 +43,8 @@ def _cmd_init(args) -> int:
 
 def _cmd_set(args) -> int:
     data = assess.load(args.assessment)
-    assess.set_status(data, args.control.upper(), args.status, args.note or "", args.evidence or [], args.assessor)
+    assess.set_status(data, args.control.upper(), args.status, args.note or "", args.evidence or [], args.assessor,
+                      independent=args.independent)
     assess.save(data, args.assessment)
     print(f"{args.control.upper()} set to {args.status}")
     return EXIT_OK
@@ -52,8 +53,8 @@ def _cmd_set(args) -> int:
 def _finish_probe(result, args) -> int:
     path = write_evidence(result, args.evidence_dir)
     print(f"{result.probe}: {result.checks} checks, {len(result.findings)} findings, {len(result.inconclusive)} inconclusive")
-    for f in result.findings:
-        print(f"  [{f.severity.upper()}] {f.control}: {f.title}" + (f" ({f.detail})" if f.detail else ""))
+    for line in result.grouped():
+        print(f"  {line}")
     for note in result.inconclusive:
         print(f"  [note] {note}")
     print(f"evidence: {path}")
@@ -111,6 +112,8 @@ def _cmd_report(args) -> int:
     data = assess.load(args.assessment)
     if args.json:
         text = json.dumps(assess.summarize(data, prof), indent=2) + "\n"
+    elif args.html:
+        text = html.render(data, prof, bayes.load_model(args.model))
     else:
         text = report.render(data, prof)
     if args.output:
@@ -124,10 +127,50 @@ def _cmd_report(args) -> int:
     return EXIT_OK
 
 
+def _cmd_belief(args) -> int:
+    prof = profile_mod.load(args.profile)
+    data = assess.load(args.assessment)
+    model = bayes.load_model(args.model)
+    if args.json:
+        rows = bayes.beliefs(data, prof, model)
+        print(json.dumps({"controls": rows, "summary": bayes.readiness(rows)}, indent=2))
+    else:
+        sys.stdout.write(bayes.render_text(data, prof, model))
+    return EXIT_OK
+
+
+def _cmd_next(args) -> int:
+    prof = profile_mod.load(args.profile)
+    data = assess.load(args.assessment)
+    actions = bayes.next_actions(data, prof, bayes.load_model(args.model), top=args.top)
+    if args.json:
+        print(json.dumps(actions, indent=2))
+        return EXIT_OK
+    if not actions:
+        print("nothing left that would change the picture")
+        return EXIT_OK
+    print("most uncertainty removed per unit of effort:")
+    for a in actions:
+        print(f"  {a['control']:<8} {a['action']:<38} {a['bits']:.2f} bits  cost {a['cost']}")
+    return EXIT_OK
+
+
+def _cmd_demo(args) -> int:
+    if args.serve:
+        from .demo.leaky_clinic import serve
+
+        serve(args.port, vulnerable=not args.patched)
+        return EXIT_OK
+    from .demo.run import run
+
+    return run()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="pz", description="Open PHI safeguard profile for AI applications.")
     parser.add_argument("--version", action="version", version=f"patient-zero {__version__}")
     parser.add_argument("--profile", help="path to an alternate controls.yaml")
+    parser.add_argument("--model", help="path to an alternate belief.yaml")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("controls", help="list the controls")
@@ -149,6 +192,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--note")
     p.add_argument("--evidence", action="append")
     p.add_argument("--assessor", default="assessor")
+    p.add_argument("--independent", action="store_true", help="the assessor is independent of the team that built the control")
     p.add_argument("-a", "--assessment", default="assessment.yaml")
     p.set_defaults(func=_cmd_set)
 
@@ -177,8 +221,26 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("assessment", nargs="?", default="assessment.yaml")
     p.add_argument("-o", "--output")
     p.add_argument("--json", action="store_true", help="summary as JSON")
+    p.add_argument("--html", action="store_true", help="self-contained HTML with belief per control")
     p.add_argument("--strict", action="store_true", help="exit 1 unless conformant")
     p.set_defaults(func=_cmd_report)
+
+    p = sub.add_parser("belief", help="P(control holds) for every control, given the evidence so far")
+    p.add_argument("assessment", nargs="?", default="assessment.yaml")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_belief)
+
+    p = sub.add_parser("next", help="rank the evidence worth gathering next")
+    p.add_argument("assessment", nargs="?", default="assessment.yaml")
+    p.add_argument("--top", type=int, default=10)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_next)
+
+    p = sub.add_parser("demo", help="investigate the bundled Leaky Clinic app, offline")
+    p.add_argument("--serve", action="store_true", help="just run the demo app so you can probe it yourself")
+    p.add_argument("--patched", action="store_true", help="with --serve, run the patched build")
+    p.add_argument("--port", type=int, default=8099)
+    p.set_defaults(func=_cmd_demo)
     return parser
 
 
