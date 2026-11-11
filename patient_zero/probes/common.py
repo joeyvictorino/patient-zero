@@ -17,6 +17,13 @@ class ProbeRefused(Exception):
     """The target file does not meet the conditions for testing."""
 
 
+class ReplayMismatch(Exception):
+    """A probe asked for something the recording does not contain, in that order."""
+
+
+MAX_RECORDED_BODY = 65536
+
+
 @dataclass
 class Finding:
     control: str
@@ -36,10 +43,19 @@ class ProbeResult:
     findings: List[Finding] = field(default_factory=list)
     inconclusive: List[str] = field(default_factory=list)
     authorization_ref: Optional[str] = None
+    build: Optional[str] = None                                # the release this run tested
+    config: Dict[str, Any] = field(default_factory=dict)       # the probe's settings, no secrets
+    params: Dict[str, Any] = field(default_factory=dict)       # random values the run drew
+    exchanges: List[Dict[str, Any]] = field(default_factory=list)  # every request and response, in order
 
     @property
     def clean(self) -> bool:
         return not self.findings
+
+    @property
+    def void(self) -> bool:
+        """No finding and no check that could have found one. Not the same as clean."""
+        return not self.findings and not any(self.checks_for.values())
 
     def tick(self, *controls: str) -> None:
         """Count one check, and credit it to the controls it can speak to."""
@@ -61,6 +77,7 @@ class ProbeResult:
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
         data["clean"] = self.clean
+        data["void"] = self.void
         return data
 
 
@@ -94,7 +111,18 @@ def load_target(path: str) -> Dict[str, Any]:
         raise ProbeRefused("target file needs a `base_url` such as https://staging.example.com")
     target["base_url"] = base.rstrip("/")
     target["_dir"] = os.path.dirname(os.path.abspath(path))
+    target["_tape"] = []
     return target
+
+
+def start(probe: str, controls: List[str], target: Dict[str, Any]) -> ProbeResult:
+    """A result wired to the target's recording, build id and this probe's settings."""
+    target["_tape"] = []  # a fresh list per run, so an earlier result keeps its own recording
+    config = {k: v for k, v in (target.get(probe) or {}).items()}
+    result = ProbeResult(probe, controls, target["base_url"], authorization_ref=target.get("authorization_ref"),
+                         build=(str(target["build"]) if target.get("build") is not None else None), config=config)
+    result.exchanges = target["_tape"]
+    return result
 
 
 def resolve_token(value: Optional[str]) -> Optional[str]:
@@ -135,6 +163,24 @@ def request(
 ) -> Response:
     if not path.startswith("/") or path.startswith("//"):
         raise ProbeRefused(f"path must be relative to base_url and start with '/': {path!r}")
+    method = method.upper()
+    if "_replay" in target:  # serve the recording instead of the network
+        if not target["_replay"]:
+            raise ReplayMismatch(f"recording ended before {method} {path}")
+        rec = target["_replay"].pop(0)
+        if (rec["method"], rec["path"], rec["auth"]) != (method, path, bool(token)):
+            raise ReplayMismatch(f"recording has {rec['method']} {rec['path']}, probe asked for {method} {path}")
+        if rec.get("truncated"):
+            raise ReplayMismatch(f"recorded body for {method} {path} was truncated; cannot replay")
+        return Response(rec["status"], rec["body"], {})
+    response = _send(target, method, path, token, body, timeout)
+    if "_tape" in target:
+        target["_tape"].append({"method": method, "path": path, "auth": bool(token), "status": response.status,
+                                "body": response.text[:MAX_RECORDED_BODY], "truncated": len(response.text) > MAX_RECORDED_BODY})
+    return response
+
+
+def _send(target: Dict[str, Any], method: str, path: str, token: Optional[str], body: Any, timeout: float) -> Response:
     url = target["base_url"] + path
     headers = {"Accept": "application/json", "User-Agent": "patient-zero-probe/0.1"}
     if token:
@@ -145,7 +191,7 @@ def request(
     if body is not None:
         data = json.dumps(body).encode("utf-8")
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, method=method.upper(), headers=headers)
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
         with _opener.open(req, timeout=timeout) as resp:
             return Response(resp.status, resp.read().decode("utf-8", "replace"), dict(resp.headers))

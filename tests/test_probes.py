@@ -79,7 +79,8 @@ def test_agent_finds_leak_and_injection(vulnerable_server):
 
 def test_agent_clean_on_fixed_target(fixed_server):
     result = agent.run(target_for(fixed_server))
-    assert result.clean and result.checks == 6 and not result.inconclusive
+    assert result.clean and result.checks == 14 and not result.inconclusive
+    assert result.checks_for == {"MEM-1": 12, "AGENT-4": 1}
 
 
 def test_egress_probe(tmp_path, fixed_server):

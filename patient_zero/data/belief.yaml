@@ -4,6 +4,7 @@
 
 prior: 0.5                 # P(control holds) before any evidence
 half_life_days: 180        # evidence loses half its weight every 180 days
+other_build_weight: 0.25   # evidence gathered on a different release counts for a quarter
 
 # Probe evidence -------------------------------------------------------------
 false_positive: 0.02       # P(probe reports a finding | control holds)

@@ -12,12 +12,16 @@ pz demo
 `pz demo` starts a deliberately broken AI app on localhost, investigates it, patches it, and investigates again. It needs no network, no account and no API key.
 
 ```
+== before any test: write the prediction down ==
+  isolation  the team says 90% it comes back clean; the model says 65%
+  agent      the team says 80% it comes back clean; the model says 62%
+
 == vulnerable build ==
   isolation   3 checks  2 finding(s)
       [CRITICAL] GATE-3: GET /api/workspaces/ws_a/clients returned tenant A's data to another tenant
       [CRITICAL] GATE-3: GET /api/workspaces/ws_a/clients returned tenant A's data to an anonymous caller
-  agent       6 checks  5 finding(s)
-      [CRITICAL] MEM-1: Agent returned tenant A's canary to tenant B (x4)
+  agent      14 checks  13 finding(s)
+      [CRITICAL] MEM-1: Agent returned tenant A's canary to tenant B (x12)
       [HIGH] AGENT-4: Agent followed an instruction planted in a record
   egress      3 checks  1 finding(s)
       [HIGH] TRUST-2: PHI enclave reached collect.adtracker.example
@@ -28,9 +32,13 @@ pz demo
       [MEDIUM] GATE-3: wildcard CORS (OLLAMA_ORIGINS=*)
       [HIGH] GATE-3: vector database published to all interfaces
 
+  predictions settled (Brier score, 0 is perfect, 0.25 is a coin flip):
+  the model (belief.yaml)    0.41
+  the team                   0.73
+
 == patched build ==
   isolation   3 checks  clean
-  agent       6 checks  clean
+  agent      14 checks  clean
   egress      2 checks  clean
   log         6 checks  clean
   stack       3 checks  clean
@@ -39,7 +47,7 @@ pz demo
   GATE-3   ############........  61.0%  partial
   TRUST-2  ############........  57.6%  partial
   AGENT-4  ##########..........  51.0%  partial
-  MEM-1    ############........  57.9%  partial
+  MEM-1    #############.......  66.9%  partial
   LOG-2    ##############......  68.1%  partial
 
 == agent action gate: the agent proposes, a fixed policy decides ==
@@ -49,6 +57,10 @@ pz demo
   email a patient, no human confirmation   DENY   CONFIRMATION_REQUIRED
   return the full note text                DENY   OUTPUT_NOT_ALLOWED:note_text
   agent returned 3 fields, 1 crossed: ['appointment_count']
+
+== replay: re-derive a finding from its recording, offline ==
+  isolation run from the vulnerable build: REPRODUCED from recorded exchanges
+  same file with its findings deleted by hand: MISMATCH, the recording still shows the leak
 
 == seal the evidence ==
   11 files under Merkle root df7638170a0c31715bbbec6d..., signed with Ed25519
@@ -95,6 +107,16 @@ if everything one source told you were wrong:
 ```
 
 **The numbers are assumptions, not measurements.** Every likelihood sits in one short file, [`patient_zero/data/belief.yaml`](patient_zero/data/belief.yaml). Nobody has calibration data for "how often does a self-attested access control turn out to be broken", so the file states its guesses and you can replace them with `--model`. The headline product also treats controls as independent, which they are not. If you have real calibration data, that is the most valuable contribution this project could get.
+
+## Method: four rules that keep the numbers honest
+
+**Predict before you look.** `pz predict isolation 0.9 --by pat` records your forecast before the probe runs, next to the model's own. The next run settles both, and `pz calibration` keeps a Brier score for each person and for `belief.yaml`. This is how the guesses in that file get replaced with data: on your own product, one settled prediction at a time. It also tells you under 20 settled predictions that the differences are noise.
+
+**A run that tested nothing is void, not clean.** If the setup request fails, or the target is plain HTTP on localhost, no check could have found a problem. The run is marked void, changes no status, moves no belief and settles no prediction.
+
+**Evidence is about a build.** Put `build:` in the target file, or run `pz build 2026.11.1` when you ship. Evidence gathered on another release keeps counting, at a quarter weight, on top of the time decay. Last release's pentest does not cover this release.
+
+**Every network finding can be replayed.** Probes record each request and response (never tokens). `pz replay evidence/isolation-....json` feeds the recording back through the probe logic offline and checks the same findings come out. A reviewer can confirm a finding without access to your system, and a result edited by hand no longer matches its own recording. Model output varies between runs, so the agent probe asks each leak prompt three times by default.
 
 ## Try it on your own stack in ten seconds
 
@@ -163,6 +185,7 @@ Small, dependency-light modules you can adopt or port. [`examples/adopt.py`](exa
 pz init --product "My App" --level L1
 cp examples/target.example.yaml target.yaml      # then edit it
 
+pz predict isolation 0.8 --by you                # before you look
 pz probe isolation --config target.yaml -a assessment.yaml
 pz probe agent     --config target.yaml -a assessment.yaml
 pz probe egress    --config target.yaml -a assessment.yaml
@@ -175,6 +198,8 @@ pz set BASE-1 pass --evidence evidence/mfa-policy.png --independent
 pz belief                                        # P(holds) per control
 pz next                                          # what to test next
 pz fragile                                       # which source you lean on most
+pz calibration                                   # how good the forecasts were, yours and the model's
+pz replay evidence/<file>.json                   # re-derive a finding offline
 pz report --html -o report.html                  # hand this to a customer
 pz report --strict                               # exit 1 unless conformant, for CI
 ```
@@ -216,9 +241,11 @@ patient-zero reuses ideas from the author's other open source security tools:
 - **[tasia](https://github.com/joeyvictorino/tasia)** (static gate for self-hosted AI stacks, Go): the exposure rules in `pz probe stack`. tasia has the full rule set with `file:line` findings.
 - **[orbit-ir](https://github.com/joeyvictorino/orbit-ir)** (agent incident reconstruction): an agent's transcript is a claim, not a record, which is the whole of `pz probe claims`.
 
+The four method rules (predict before reading results, discard runs that never reached the target, bind results to an exact build, and check a replay against its recording) are adapted from the testing discipline described in the README of [bo2-mac](https://github.com/adrbn/bo2-mac), an unrelated recompilation project. No code was taken from it.
+
 ## Help wanted
 
-- Calibration data or better arguments for the numbers in `belief.yaml`
+- Settled predictions from real assessments (`pz calibration --json`), or better arguments for the numbers in `belief.yaml`
 - Review of the control wording and mappings by people who do HIPAA assessments
 - More probes: agent permission escalation, memory deletion, and a live test of the action gate
 - Ports of the reference safeguards to TypeScript and Go

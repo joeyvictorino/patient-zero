@@ -6,14 +6,14 @@ import ssl
 from typing import Any, Dict
 from urllib.parse import urlparse
 
-from .common import ProbeResult, request
+from .common import ProbeResult, request, start
 
 _LOCAL = {"localhost", "127.0.0.1", "::1"}
 _WEAK = {"SSLv2", "SSLv3", "TLSv1", "TLSv1.1"}
 
 
 def run(target: Dict[str, Any]) -> ProbeResult:
-    result = ProbeResult("tls", ["BASE-2"], target["base_url"], authorization_ref=target.get("authorization_ref"))
+    result = start("tls", ["BASE-2"], target)
     parsed = urlparse(target["base_url"])
     host = parsed.hostname or ""
     result.checks += 1

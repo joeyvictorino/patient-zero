@@ -72,6 +72,7 @@ def set_status(
         # The ledger behind `pz belief`: who judged, how, and when.
         entry.setdefault("observations", []).append({
             "kind": "attestation",
+            "build": assessment.get("build"),
             "by": "independent" if independent else "self",
             "outcome": status,
             "date": date.today().isoformat(),
@@ -85,18 +86,25 @@ def apply_probe(assessment: Dict[str, Any], result: ProbeResult, evidence_path: 
     A finding sets the control to fail, even over an assessor's pass.
     A clean run never sets pass: it lifts not_assessed (or this probe's own
     earlier fail) to partial and leaves the judgment to the assessor.
+    A run that made no check able to test a control leaves that control alone.
     """
     source = f"probe:{result.probe}"
     failed = {f.control for f in result.findings}
     touched = []
+    if result.build:
+        assessment["build"] = result.build
+    _resolve_predictions(assessment, result)
     for control_id in sorted(set(result.controls) | failed):
         entry = assessment["controls"].get(control_id)
         if entry is None:
             continue  # control not required at this level
+        if control_id not in failed and not result.checks_for.get(control_id):
+            continue  # the run never tested this control: void, which is not the same as clean
         touched.append(control_id)
         if evidence_path not in entry["evidence"]:
             entry["evidence"].append(evidence_path)
         entry.setdefault("observations", []).append({
+            "build": result.build,
             "kind": "probe",
             "probe": result.probe,
             "outcome": "finding" if control_id in failed else "clean",
@@ -115,6 +123,35 @@ def apply_probe(assessment: Dict[str, Any], result: ProbeResult, evidence_path: 
                 updated=date.today().isoformat(),
             )
     return touched
+
+
+def predict(assessment: Dict[str, Any], probe: str, p_clean: float, by: str, model_p: Optional[float] = None) -> Dict[str, Any]:
+    """Write down, before the run, how likely you think the probe is to come back clean.
+
+    The next run of that probe that actually tests something settles it. One open
+    prediction per person per probe: you cannot revise after seeing the result,
+    because by then it is already settled.
+    """
+    if not 0 <= p_clean <= 1:
+        raise ValueError("probability must be between 0 and 1")
+    if not by.strip():
+        raise ValueError("a prediction needs a name")
+    predictions = assessment.setdefault("predictions", [])
+    if any(q["probe"] == probe and q["by"] == by and q["outcome"] is None for q in predictions):
+        raise ValueError(f"{by} already has an open prediction for the {probe} probe")
+    entry = {"probe": probe, "by": by, "p_clean": float(p_clean), "model_p_clean": model_p,
+             "made": date.today().isoformat(), "outcome": None, "settled": None}
+    predictions.append(entry)
+    return entry
+
+
+def _resolve_predictions(assessment: Dict[str, Any], result: ProbeResult) -> None:
+    if result.void:
+        return  # a run that tested nothing settles nothing
+    for q in assessment.get("predictions") or []:
+        if q["probe"] == result.probe and q["outcome"] is None:
+            q["outcome"] = "clean" if result.clean else "finding"
+            q["settled"] = date.today().isoformat()
 
 
 def summarize(assessment: Dict[str, Any], profile: Profile) -> Dict[str, Any]:

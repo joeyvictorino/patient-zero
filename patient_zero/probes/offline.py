@@ -25,7 +25,8 @@ def run_egress(target: Dict[str, Any]) -> ProbeResult:
     register = egress.load_register(_resolve(target, cfg["register"]))
     with open(_resolve(target, cfg["observed"]), "r", encoding="utf-8") as fh:
         observed = [line.strip() for line in fh if line.strip() and not line.startswith("#")]
-    result = ProbeResult("egress", ["TRUST-1", "TRUST-2"], target["base_url"], authorization_ref=target.get("authorization_ref"))
+    result = ProbeResult("egress", ["TRUST-1", "TRUST-2"], target["base_url"], authorization_ref=target.get("authorization_ref"),
+                         build=(str(target["build"]) if target.get("build") is not None else None))
     for _ in set(observed):
         result.tick("TRUST-2")
     for _ in register:

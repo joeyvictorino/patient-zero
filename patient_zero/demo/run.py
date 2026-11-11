@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 import yaml
 
-from .. import assess, bayes, profile as profile_mod, seal as seal_mod
+from .. import assess, bayes, profile as profile_mod, replay as replay_mod, seal as seal_mod
 from ..policy import ActionGate, Policy, Proposal
 from ..auditlog import AuditLog
 from ..probes import agent, isolation, offline, stack, write_evidence
@@ -128,7 +128,16 @@ def run(out=print) -> int:
     out("patient-zero demo: investigating Leaky Clinic, a deliberately broken AI app.")
     out("Everything runs on 127.0.0.1 with synthetic data. Nothing leaves this machine.")
     with tempfile.TemporaryDirectory(prefix="pz-demo-") as workdir:
+        out("\n== before any test: write the prediction down ==")
+        for probe, guess in (("isolation", 0.9), ("agent", 0.8)):
+            model_p = bayes.predicted_clean(data, prof, model, probe)
+            assess.predict(data, probe, guess, "the team", model_p)
+            out(f"  {probe:<10} the team says {guess * 100:.0f}% it comes back clean; the model says {model_p * 100:.0f}%")
+
         touched = _investigate("vulnerable", True, data, workdir, out)
+        out("\n  predictions settled (Brier score, 0 is perfect, 0.25 is a coin flip):")
+        for row in bayes.calibration(data):
+            out(f"  {row['forecaster']:<26} {row['brier']:.2f}")
         out("\n  belief that each tested control holds:")
         for line in _belief_lines(data, prof, model, touched):
             out(line)
@@ -142,6 +151,18 @@ def run(out=print) -> int:
 
         out("\n== agent action gate: the agent proposes, a fixed policy decides ==")
         _gate_demo(out)
+
+        out("\n== replay: re-derive a finding from its recording, offline ==")
+        first = sorted(f for f in os.listdir(os.path.join(workdir, "evidence")) if f.startswith("isolation"))[0]
+        recorded = os.path.join(workdir, "evidence", first)
+        reproduced, _ = replay_mod.replay(recorded)
+        out("  isolation run from the vulnerable build: " + ("REPRODUCED from recorded exchanges" if reproduced else "MISMATCH"))
+        doctored = os.path.join(workdir, "doctored.json")
+        with open(recorded, encoding="utf-8") as src, open(doctored, "w", encoding="utf-8") as dst:
+            dst.write(src.read().replace('"findings": [', '"findings_hidden": [', 1).replace('"clean": false', '"clean": true', 1)
+                      .replace('"result": {', '"result": {"findings": [],', 1))
+        reproduced, why = replay_mod.replay(doctored)
+        out("  same file with its findings deleted by hand: " + ("NOT DETECTED" if reproduced else "MISMATCH, the recording still shows the leak"))
 
         out("\n== seal the evidence ==")
         a_path, key, sealed = (os.path.join(workdir, n) for n in ("assessment.yaml", "demo.key", "seal.json"))

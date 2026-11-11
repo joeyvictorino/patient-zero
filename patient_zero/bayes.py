@@ -73,12 +73,15 @@ def likelihoods(model: Dict[str, Any], obs: Dict[str, Any], control_id: str) -> 
     raise ValueError(f"unknown observation kind: {obs['kind']}")
 
 
-def _weight(model: Dict[str, Any], obs: Dict[str, Any], today: date) -> float:
+def _weight(model: Dict[str, Any], obs: Dict[str, Any], today: date, build: Optional[str] = None) -> float:
     try:
         age = (today - date.fromisoformat(str(obs["date"]))).days
+        weight = 0.5 ** (max(0, age) / float(model["half_life_days"]))
     except (KeyError, ValueError):
-        return 1.0
-    return 0.5 ** (max(0, age) / float(model["half_life_days"]))
+        weight = 1.0
+    if build and obs.get("build") and str(obs["build"]) != str(build):
+        weight *= float(model.get("other_build_weight", 0.25))  # evidence about a different release
+    return weight
 
 
 def _key(obs: Dict[str, Any]) -> str:
@@ -115,14 +118,14 @@ def source_of(obs: Dict[str, Any]) -> str:
 
 
 def posterior(model: Dict[str, Any], entry: Dict[str, Any], control_id: str, today: Optional[date] = None,
-              skip: Optional[str] = None, without_source: Optional[str] = None) -> float:
+              skip: Optional[str] = None, without_source: Optional[str] = None, build: Optional[str] = None) -> float:
     today = today or date.today()
     total = _log_odds(model["prior"])
     for key, obs in current_observations(entry).items():
         if key == skip or (without_source is not None and source_of(obs) == without_source):
             continue
         if_holds, if_broken = likelihoods(model, obs, control_id)
-        total += _weight(model, obs, today) * math.log(_clamp(if_holds) / _clamp(if_broken))
+        total += _weight(model, obs, today, build) * math.log(_clamp(if_holds) / _clamp(if_broken))
     return _from_log_odds(total)
 
 
@@ -137,7 +140,7 @@ def beliefs(assessment: Dict[str, Any], profile: Profile, model: Dict[str, Any],
             "id": control.id,
             "family": control.family,
             "status": entry.get("status", "not_assessed"),
-            "p": posterior(model, entry, control.id, today),
+            "p": posterior(model, entry, control.id, today, build=assessment.get("build")),
             "sources": sorted(current_observations(entry)),
         })
     return rows
@@ -154,9 +157,9 @@ def readiness(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def _expected_entropy_after(model, entry, control_id, key, outcomes, today) -> float:
+def _expected_entropy_after(model, entry, control_id, key, outcomes, today, build=None) -> float:
     """Expected uncertainty after a test, averaging over how it could come out."""
-    base = posterior(model, entry, control_id, today, skip=key)  # the new result replaces the old one
+    base = posterior(model, entry, control_id, today, skip=key, build=build)  # the new result replaces the old one
     total = 0.0
     for if_holds, if_broken in outcomes:
         p_outcome = base * if_holds + (1 - base) * if_broken
@@ -178,7 +181,8 @@ def next_actions(assessment: Dict[str, Any], profile: Profile, model: Dict[str, 
         entry = assessment["controls"].get(control.id, {})
         if entry.get("status") == "not_applicable":
             continue
-        now = entropy(posterior(model, entry, control.id, today))
+        build = assessment.get("build")
+        now = entropy(posterior(model, entry, control.id, today, build=build))
         candidates = []
         seen = current_observations(entry)
         for probe, covered in model.get("coverage", {}).items():
@@ -202,7 +206,7 @@ def next_actions(assessment: Dict[str, Any], profile: Profile, model: Dict[str, 
             candidates.append((label, f"attestation:{by}", costs[by],
                                [(cfg["if_holds"], cfg["if_broken"]), (1 - cfg["if_holds"], 1 - cfg["if_broken"])]))
         for label, key, cost, outcomes in candidates:
-            gain = now - _expected_entropy_after(model, entry, control.id, key, outcomes, today)
+            gain = now - _expected_entropy_after(model, entry, control.id, key, outcomes, today, build)
             if gain > 1e-4:
                 actions.append({"control": control.id, "action": label, "bits": gain, "cost": cost,
                                 "bits_per_cost": gain / cost})
@@ -232,9 +236,42 @@ def fragility(assessment: Dict[str, Any], profile: Profile, model: Dict[str, Any
         lost = 0.0
         for cid in supported:
             entry = assessment["controls"][cid]
-            lost += posterior(model, entry, cid, today) - posterior(model, entry, cid, today, without_source=source)
+            build = assessment.get("build")
+            lost += (posterior(model, entry, cid, today, build=build)
+                     - posterior(model, entry, cid, today, without_source=source, build=build))
         rows.append({"source": source, "controls": sorted(set(supported)), "belief_lost": lost})
     rows.sort(key=lambda r: r["belief_lost"], reverse=True)
+    return rows
+
+
+def predicted_clean(assessment: Dict[str, Any], profile: Profile, model: Dict[str, Any], probe: str,
+                    today: Optional[date] = None) -> float:
+    """What the model itself expects: P(a full run of this probe reports no finding)."""
+    typical = model.get("typical_checks", 10)
+    n = int(typical.get(probe, typical.get("default", 10)) if isinstance(typical, dict) else typical)
+    fp = model["false_positive"]
+    required = {c.id for c in profile.for_level(assessment["level"])}
+    total = 1.0
+    for control_id in model.get("coverage", {}).get(probe, {}):
+        if control_id not in required:
+            continue
+        p = posterior(model, assessment["controls"].get(control_id, {}), control_id, today, build=assessment.get("build"))
+        total *= p * (1 - fp) + (1 - p) * (1 - power(model, probe, control_id, n))
+    return total
+
+
+def calibration(assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Brier score per forecaster over settled predictions. 0 is perfect, 0.25 is a coin flip."""
+    scores: Dict[str, List[float]] = {}
+    for q in assessment.get("predictions") or []:
+        if q["outcome"] is None:
+            continue
+        actual = 1.0 if q["outcome"] == "clean" else 0.0
+        scores.setdefault(q["by"], []).append((q["p_clean"] - actual) ** 2)
+        if q.get("model_p_clean") is not None:
+            scores.setdefault("the model (belief.yaml)", []).append((q["model_p_clean"] - actual) ** 2)
+    rows = [{"forecaster": who, "settled": len(v), "brier": sum(v) / len(v)} for who, v in scores.items()]
+    rows.sort(key=lambda r: r["brier"])
     return rows
 
 

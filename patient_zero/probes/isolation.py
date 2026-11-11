@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from .common import ProbeRefused, ProbeResult, request, tenant_token
+from .common import ProbeRefused, ProbeResult, request, start, tenant_token
 
 CONTROLS = ["GATE-3", "TEST-1"]
 
@@ -26,7 +26,7 @@ def run(target: Dict[str, Any]) -> ProbeResult:
     canary = cfg.get("canary")
     token_a = tenant_token(target, "a")
     token_b = tenant_token(target, "b")
-    result = ProbeResult("isolation", CONTROLS, target["base_url"], authorization_ref=target.get("authorization_ref"))
+    result = start("isolation", CONTROLS, target)
 
     for res in resources:
         method = str(res.get("method", "GET"))

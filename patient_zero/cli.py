@@ -6,7 +6,7 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, report, seal as seal_mod
+from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, replay as replay_mod, report, seal as seal_mod
 from .probes import ProbeRefused, load_target, write_evidence
 from .probes import agent as agent_probe
 from .probes import claims as claims_probe
@@ -55,6 +55,8 @@ def _cmd_set(args) -> int:
 def _finish_probe(result, args) -> int:
     path = write_evidence(result, args.evidence_dir)
     print(f"{result.probe}: {result.checks} checks, {len(result.findings)} findings, {len(result.inconclusive)} inconclusive")
+    if result.void:
+        print("  VOID: no check in this run could have found a problem. This is not a clean result.")
     for line in result.grouped():
         print(f"  {line}")
     for note in result.inconclusive:
@@ -162,6 +164,49 @@ def _cmd_next(args) -> int:
     for a in actions:
         print(f"  {a['control']:<8} {a['action']:<38} {a['bits']:.2f} bits  cost {a['cost']}")
     return EXIT_OK
+
+
+def _cmd_predict(args) -> int:
+    prof = profile_mod.load(args.profile)
+    data = assess.load(args.assessment)
+    model_p = bayes.predicted_clean(data, prof, bayes.load_model(args.model), args.probe)
+    assess.predict(data, args.probe, args.probability, args.by, model_p)
+    assess.save(data, args.assessment)
+    print(f"recorded: {args.by} gives the {args.probe} probe a {args.probability * 100:.0f}% chance of coming back clean")
+    print(f"the model gives it {model_p * 100:.0f}%. The next run that tests something settles both.")
+    return EXIT_OK
+
+
+def _cmd_calibration(args) -> int:
+    data = assess.load(args.assessment)
+    rows = bayes.calibration(data)
+    still_open = sum(1 for q in data.get("predictions") or [] if q["outcome"] is None)
+    if args.json:
+        print(json.dumps({"forecasters": rows, "open": still_open}, indent=2))
+        return EXIT_OK
+    if not rows:
+        print(f"no settled predictions yet ({still_open} open). Use `pz predict` before you run a probe.")
+        return EXIT_OK
+    print("Brier score (0 is perfect, 0.25 is a coin flip, lower is better):")
+    for r in rows:
+        print(f"  {r['forecaster']:<28} {r['brier']:.3f}  over {r['settled']} settled")
+    if max(r["settled"] for r in rows) < 20:
+        print("  Fewer than 20 settled predictions. Differences this size are noise; keep predicting.")
+    return EXIT_OK
+
+
+def _cmd_build(args) -> int:
+    data = assess.load(args.assessment)
+    previous = data.get("build")
+    data["build"] = args.id
+    assess.save(data, args.assessment)
+    print(f"current build set to {args.id}" + (f" (was {previous}); evidence from other builds now counts for less" if previous else ""))
+    return EXIT_OK
+
+
+def _cmd_replay(args) -> int:
+    reproduced, differences = replay_mod.replay(args.evidence)
+    return _report_errors(differences, "REPRODUCED: the recorded exchanges yield exactly the findings in this file")
 
 
 def _cmd_fragile(args) -> int:
@@ -308,6 +353,27 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--top", type=int, default=10)
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_next)
+
+    p = sub.add_parser("predict", help="before a probe runs, record how likely you think it is to come back clean")
+    p.add_argument("probe", choices=["isolation", "agent", "egress", "tls", "log", "stack", "claims"])
+    p.add_argument("probability", type=float, help="0 to 1")
+    p.add_argument("--by", required=True, help="who is predicting")
+    p.add_argument("-a", "--assessment", default="assessment.yaml")
+    p.set_defaults(func=_cmd_predict)
+
+    p = sub.add_parser("calibration", help="score past predictions, yours and the model's")
+    p.add_argument("assessment", nargs="?", default="assessment.yaml")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_calibration)
+
+    p = sub.add_parser("build", help="set the release under assessment; older evidence then counts for less")
+    p.add_argument("id")
+    p.add_argument("-a", "--assessment", default="assessment.yaml")
+    p.set_defaults(func=_cmd_build)
+
+    p = sub.add_parser("replay", help="re-derive a probe's findings from its recorded exchanges, offline")
+    p.add_argument("evidence")
+    p.set_defaults(func=_cmd_replay)
 
     p = sub.add_parser("fragile", help="which single source of evidence the picture leans on most")
     p.add_argument("assessment", nargs="?", default="assessment.yaml")

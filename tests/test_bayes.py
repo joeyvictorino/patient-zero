@@ -124,7 +124,7 @@ def test_demo_runs_offline_and_shows_the_fix():
     text = "\n".join(lines)
     assert "vulnerable build" in text and "patched build" in text
     assert "GATE-3: GET /api/workspaces/ws_a/clients returned tenant A's data to another tenant" in text
-    assert "(x4)" in text and "AGENT-4" in text and "TRUST-2" in text and "LOG-2" in text
+    assert "(x12)" in text and "AGENT-4" in text and "TRUST-2" in text and "LOG-2" in text
     patched = text.split("== patched build ==")[1]
     assert patched.count("clean") >= 4 and "finding" not in patched.split("belief after")[0]
 
