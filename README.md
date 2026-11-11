@@ -2,7 +2,7 @@
 
 Every AI app that touches PHI is patient zero. We run the outbreak investigation.
 
-An open safeguard profile for AI apps that handle protected health information, shipped as code: 43 testable controls, drop-in reference safeguards, seven probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence you can disclose one file at a time.
+An open safeguard profile for AI apps that handle protected health information, shipped as code: 43 testable controls, drop-in reference safeguards, nine probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence you can disclose one file at a time.
 
 ```
 pip install git+https://github.com/joeyvictorino/patient-zero
@@ -20,9 +20,9 @@ pz demo
   isolation   3 checks  2 finding(s)
       [CRITICAL] GATE-3: GET /api/workspaces/ws_a/clients returned tenant A's data to another tenant
       [CRITICAL] GATE-3: GET /api/workspaces/ws_a/clients returned tenant A's data to an anonymous caller
-  agent      14 checks  13 finding(s)
+  agent      21 checks  16 finding(s)
       [CRITICAL] MEM-1: Agent returned tenant A's canary to tenant B (x12)
-      [HIGH] AGENT-4: Agent followed an instruction planted in a record
+      [HIGH] AGENT-4: Agent followed an instruction planted in a record (x4)
   egress      3 checks  1 finding(s)
       [HIGH] TRUST-2: PHI enclave reached collect.adtracker.example
   log         3 checks  1 finding(s)
@@ -38,7 +38,7 @@ pz demo
 
 == patched build ==
   isolation   3 checks  clean
-  agent      14 checks  clean
+  agent      21 checks  clean
   egress      2 checks  clean
   log         6 checks  clean
   stack       3 checks  clean
@@ -46,7 +46,7 @@ pz demo
   belief after the same probes come back clean:
   GATE-3   ############........  61.0%  partial
   TRUST-2  ############........  57.6%  partial
-  AGENT-4  ##########..........  51.0%  partial
+  AGENT-4  ###########.........  54.8%  partial
   MEM-1    #############.......  66.9%  partial
   LOG-2    ##############......  68.1%  partial
 
@@ -128,6 +128,14 @@ pz probe stack --path .
 
 It flags inference APIs, model UIs, vector databases and data stores published on every interface, host networking, privileged containers, a mounted Docker socket and wildcard CORS.
 
+On Postgres or Supabase? Point it at your migrations:
+
+```
+pz probe rls --path supabase/migrations
+```
+
+It reads the SQL in order and reports tables that end up without row level security, and policies that say `USING (true)`.
+
 ## Signed evidence, disclosed one file at a time
 
 ```
@@ -176,6 +184,8 @@ Small, dependency-light modules you can adopt or port. [`examples/adopt.py`](exa
 | `patient_zero.auditlog` | Append-only, hash-chained log with separate user and agent identity | LOG-1, LOG-2, AGENT-1 |
 | `patient_zero.egress` | Subprocessor register and egress allowlist | TRUST-1, TRUST-2, TRUST-3 |
 | `patient_zero.phi` | Heuristic likely-PHI tripwire for non-PHI workspaces | GATE-5 |
+| `patient_zero.hidden` | Concealed-text tripwire: invisible characters, hidden markup and comments in anything an agent will read. Judges position, not wording | AGENT-4 |
+| `patient_zero.phi.Vault` | Swap identifiers for placeholders before a model call and restore them after | AGENT-7 |
 | `patient_zero.policy` | Agent action gate: the agent proposes, a deterministic policy decides, only allowlisted fields cross | AGENT-2, AGENT-3, AGENT-6, AGENT-7 |
 | `patient_zero.custody` | Merkle tree and Ed25519, standard library only | TEST-4 |
 
@@ -192,7 +202,10 @@ pz probe egress    --config target.yaml -a assessment.yaml
 pz probe tls       --config target.yaml -a assessment.yaml
 pz probe log --file audit.jsonl --expected-head <anchored hash> -a assessment.yaml
 pz probe stack --path . -a assessment.yaml
+pz probe rls --path supabase/migrations -a assessment.yaml
 pz probe claims --transcript agent.jsonl --file audit.jsonl -a assessment.yaml
+pz manifest /data -o before.json                 # then back up, restore elsewhere, and:
+pz probe restore --manifest before.json --path /restored -a assessment.yaml
 
 pz set BASE-1 pass --evidence evidence/mfa-policy.png --independent
 pz belief                                        # P(holds) per control
@@ -207,12 +220,14 @@ pz report --strict                               # exit 1 unless conformant, for
 | Probe | Tests | Controls |
 | --- | --- | --- |
 | `isolation` | Tenant A's routes requested as tenant B and with no token | GATE-3, TEST-1 |
-| `agent` | Cross-tenant canary leakage; an instruction planted in a record | MEM-1, AGENT-4 |
+| `agent` | Cross-tenant canary leakage, with a positive control; an instruction planted in each carrier, dressed four ways | MEM-1, AGENT-4 |
 | `egress` | Observed outbound hosts against the register | TRUST-1, TRUST-2 |
 | `tls` | Transport encryption | BASE-2 |
 | `log` | Hash chain integrity | LOG-2 |
 | `stack` | Docker Compose files that publish the stack's insides | GATE-3 |
+| `rls` | SQL migrations that leave a table without row level security | GATE-3 |
 | `claims` | What agents said they did against what the audit log recorded | LOG-1, AGENT-1 |
+| `restore` | A restored directory against checksums taken before the backup | BASE-4 |
 
 ![HTML report](docs/report.png)
 
@@ -229,9 +244,25 @@ Want to try the probes by hand first? `pz demo --serve` runs the broken app on p
 
 - **Not a HIPAA certification.** HHS does not issue or recognize one. This produces evidence for a customer or an external assessor.
 - **Not a NIST publication**, and not legal advice. Every HIPAA paragraph cited was checked to exist in eCFR on 2026-11-10; whether it is the right home for a control is the author's judgment. The SP 800-53 and CSF identifiers are unchecked.
-- **Not a pentest.** Seven probes touch ten of 43 controls. The other 33 need a person, and so does the final call on those ten.
-- **Not battle-tested.** Draft 0.1, one author, proven only against its own demo app. The agent probe sends one planted instruction; a clean result says little, and the score reflects that.
+- **Not a pentest.** Nine probes touch eleven of 43 controls. The other 32 need a person, and so does the final call on those eleven.
+- **Not battle-tested.** Draft 0.1, one author, proven only against its own demo app. The agent probe plants one instruction per carrier in four dressings; current models shrug off naive injections, so a clean result says little, and the score reflects that. A model may also behave differently when it can tell it is being tested, which is why the markers look like ordinary words and the user agent is configurable.
 - **Not tamper-proof logging.** The hash chain shows edits. It cannot show a cut tail unless you anchor the head hash somewhere the app cannot write.
+
+## Built from this month's Hacker News
+
+Features that came out of threads and submissions from October and November 2026. Only titles and comment threads were read for these, not every linked article.
+
+| What HN said | What it became here |
+| --- | --- |
+| Guardrails belong outside the prompt; a prompt is not enforcement ([containment thread](https://news.ycombinator.com/item?id=50091788), [erased footage thread](https://news.ycombinator.com/item?id=50085323)) | The action gate is ordinary code the model cannot talk its way past; the demo shows five proposals decided without a model |
+| You cannot do a root-cause analysis from an agent's own summary; you need a log of what it ran ([same thread](https://news.ycombinator.com/item?id=50085323)) | `pz probe claims` |
+| A backup is unproven until a restore matches checksums ([same thread](https://news.ycombinator.com/item?id=50085323)) | `pz manifest` and `pz probe restore` |
+| Injection is moving from short strings into tool results and long fetched content; hidden white-on-white text shows up in real documents ([HTTP headers study thread](https://news.ycombinator.com/item?id=50104310)) | The agent probe plants its instruction as plain text, an HTML comment, a hidden span and a fake tool result; `patient_zero.hidden` flags concealment |
+| Scanners should be positional, not phrasal; classifiers are poor security boundaries ([1](https://news.ycombinator.com/item?id=50223560), [2](https://news.ycombinator.com/item?id=50056871)) | The tripwire looks at where text sits, never at wording, and the README calls it a tripwire, not a boundary |
+| An auditor should try to disprove its own findings ([PuedoBot](https://news.ycombinator.com/item?id=50207787)) | Findings must reproduce; the leak test now needs a positive control, or it is void |
+| Models can recognize a test and behave differently ([containment thread](https://news.ycombinator.com/item?id=50091788)) | Word-like markers, configurable user agent, and a stated limit |
+| HIPAA evidence from Supabase row level security ([Show HN](https://news.ycombinator.com/item?id=50362545)) | `pz probe rls` |
+| Keep secrets away from agents with reversible placeholders ([Cloakroom](https://news.ycombinator.com/item?id=50446007), [mcp-shield](https://news.ycombinator.com/item?id=50089763)) | `phi.Vault` |
 
 ## Lineage
 

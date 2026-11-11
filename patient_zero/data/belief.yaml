@@ -17,6 +17,8 @@ detection:                 # chance that one check catches a break it is able to
   egress: 0.4
   stack: 0.5
   claims: 0.3
+  rls: 0.5
+  restore: 0.9
   tls: 0.9
   log: 0.9
 coverage:                  # share of the control a probe can see at all
@@ -27,8 +29,11 @@ coverage:                  # share of the control a probe can see at all
   log: {LOG-2: 0.6}
   stack: {GATE-3: 0.3}       # static compose review sees exposure, not access control
   claims: {LOG-1: 0.4, AGENT-1: 0.4}
+  rls: {GATE-3: 0.4}         # reads migrations, not the live database
+  restore: {BASE-4: 0.6}     # proves one restore matched, not the schedule or the plan
 typical_checks:            # assumed size of a full probe run, for ranking what to do next
   default: 10
+  restore: 1               # one verified restore answers the question
   tls: 1                   # one handshake answers the question
   log: 1                   # one verification answers the question
 

@@ -182,7 +182,9 @@ def request(
 
 def _send(target: Dict[str, Any], method: str, path: str, token: Optional[str], body: Any, timeout: float) -> Response:
     url = target["base_url"] + path
-    headers = {"Accept": "application/json", "User-Agent": "patient-zero-probe/0.1"}
+    # Honest by default. A target that treats known test traffic differently hides problems,
+    # so set `user_agent` in the target file to match your real clients when that matters.
+    headers = {"Accept": "application/json", "User-Agent": str(target.get("user_agent", "patient-zero-probe/0.1"))}
     if token:
         header = target.get("auth_header", "Authorization")
         scheme = target.get("auth_scheme", "Bearer")

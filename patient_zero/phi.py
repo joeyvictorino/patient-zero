@@ -38,8 +38,9 @@ class Finding:
     end: int
 
 
-def scan(text: str) -> List[Finding]:
-    health_context = bool(_HEALTH_TERMS.search(text))
+def scan(text: str, strict: bool = False) -> List[Finding]:
+    """`strict` flags phone numbers and email addresses even with no health context around them."""
+    health_context = strict or bool(_HEALTH_TERMS.search(text))
     findings: List[Finding] = []
     for kind, pattern in _PATTERNS:
         if kind in _CONTEXT_ONLY and not health_context:
@@ -64,3 +65,47 @@ def redact(text: str) -> str:
         cursor = f.end
     out.append(text[cursor:])
     return "".join(out)
+
+
+class Vault:
+    """Swap identifiers for placeholders before text goes to a model, and swap them back after.
+
+        vault = Vault()
+        safe = vault.mask("Call Ana at 702-555-0100 about MRN: A1234567")
+        reply = call_model(safe)          # the model never sees the number or the MRN
+        final = vault.unmask(reply)
+
+    The same value always gets the same placeholder, so the model can still tell
+    two people apart. Detection is the heuristic in this module: it reduces what
+    you send, it does not make text de-identified under 45 CFR 164.514, and names
+    and free-text details pass through. Keep the vault in memory for one request.
+    """
+
+    def __init__(self) -> None:
+        self._by_value: dict = {}
+        self._by_token: dict = {}
+
+    def mask(self, text: str) -> str:
+        out, cursor = [], 0
+        for f in scan(text, strict=True):
+            if f.start < cursor:
+                continue
+            value = text[f.start:f.end]
+            token = self._by_value.get(value)
+            if token is None:
+                token = f"[[PZ:{f.kind.upper()}:{len(self._by_value) + 1}]]"
+                self._by_value[value] = token
+                self._by_token[token] = value
+            out.append(text[cursor:f.start])
+            out.append(token)
+            cursor = f.end
+        out.append(text[cursor:])
+        return "".join(out)
+
+    def unmask(self, text: str) -> str:
+        for token, value in self._by_token.items():
+            text = text.replace(token, value)
+        return text
+
+    def __len__(self) -> int:
+        return len(self._by_value)

@@ -32,8 +32,8 @@ def replay(evidence_path: str) -> Tuple[bool, List[str]]:
     if not recorded.get("exchanges"):
         raise ValueError("this evidence file has no recorded exchanges (written by an older version)")
     config: Dict[str, Any] = dict(recorded.get("config") or {})
-    if recorded.get("params", {}).get("marker"):
-        config["_marker"] = recorded["params"]["marker"]
+    if recorded.get("params", {}).get("markers"):
+        config["_markers"] = recorded["params"]["markers"]
     target = {
         "base_url": recorded["target"],
         "authorization_ref": recorded.get("authorization_ref"),

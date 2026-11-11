@@ -6,16 +6,19 @@ import json
 import sys
 from typing import List, Optional
 
-from . import __version__, assess, auditlog, bayes, html, phi, profile as profile_mod, replay as replay_mod, report, seal as seal_mod
+from . import __version__, assess, auditlog, bayes, hidden, html, phi, profile as profile_mod, replay as replay_mod, report, seal as seal_mod
 from .probes import ProbeRefused, load_target, write_evidence
 from .probes import agent as agent_probe
 from .probes import claims as claims_probe
+from .probes import restore as restore_probe
+from .probes import rls as rls_probe
 from .probes import stack as stack_probe
 from .probes import isolation as isolation_probe
 from .probes import offline as offline_probe
 from .probes import tls as tls_probe
 
 EXIT_OK, EXIT_FINDINGS, EXIT_USAGE = 0, 1, 2
+PROBES = ["isolation", "agent", "egress", "tls", "log", "stack", "rls", "claims", "restore"]
 
 
 def _cmd_controls(args) -> int:
@@ -78,6 +81,13 @@ def _cmd_probe(args) -> int:
         return _finish_probe(offline_probe.run_log(args.file, args.expected_head), args)
     if args.name == "stack":
         return _finish_probe(stack_probe.run(args.path), args)
+    if args.name == "rls":
+        return _finish_probe(rls_probe.run(args.path), args)
+    if args.name == "restore":
+        if not args.manifest:
+            print("pz probe restore needs --manifest and --path", file=sys.stderr)
+            return EXIT_USAGE
+        return _finish_probe(restore_probe.run(args.manifest, args.path), args)
     if args.name == "claims":
         if not args.file or not args.transcript:
             print("pz probe claims needs --transcript and --file", file=sys.stderr)
@@ -96,6 +106,15 @@ def _cmd_probe(args) -> int:
     return _finish_probe(runner(target), args)
 
 
+def _cmd_manifest(args) -> int:
+    data = restore_probe.manifest(args.directory)
+    with open(args.output, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2)
+        fh.write("\n")
+    print(f"wrote {args.output}: {len(data['files'])} files")
+    return EXIT_OK
+
+
 def _cmd_log(args) -> int:
     outcome = auditlog.verify(args.file, args.expected_head)
     if outcome.ok:
@@ -107,6 +126,16 @@ def _cmd_log(args) -> int:
 
 def _cmd_scan(args) -> int:
     text = sys.stdin.read() if args.file == "-" else open(args.file, "r", encoding="utf-8").read()
+    if args.hidden:
+        concealed = hidden.scan(text)
+        kinds = {}
+        for c in concealed:
+            kinds[c.kind] = kinds.get(c.kind, 0) + 1
+        print("concealed text: " + (", ".join(f"{k} x{n}" for k, n in sorted(kinds.items())) if kinds else "none found"))
+        for c in concealed:
+            if c.revealed:
+                print(f"  {c.kind} hides: {c.revealed[:200]}")
+        return EXIT_FINDINGS if concealed else EXIT_OK
     findings = phi.scan(text)
     if args.redact:
         sys.stdout.write(phi.redact(text))
@@ -313,15 +342,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=_cmd_set)
 
     p = sub.add_parser("probe", help="run a probe and write evidence")
-    p.add_argument("name", choices=["isolation", "agent", "egress", "tls", "log", "stack", "claims"])
-    p.add_argument("--config", help="target.yaml (not needed for log, stack or claims)")
+    p.add_argument("name", choices=PROBES)
+    p.add_argument("--config", help="target.yaml (network probes and egress)")
+    p.add_argument("--manifest", help="checksum manifest from `pz manifest` (restore probe)")
     p.add_argument("--file", help="audit log file (log and claims probes)")
     p.add_argument("--transcript", help="agent transcript, JSON Lines (claims probe)")
-    p.add_argument("--path", default=".", help="directory or compose file (stack probe)")
+    p.add_argument("--path", default=".", help="directory or file (stack, rls and restore probes)")
     p.add_argument("--expected-head", help="anchored head hash (log probe)")
     p.add_argument("-a", "--assessment", help="assessment file to update")
     p.add_argument("--evidence-dir", default="evidence")
     p.set_defaults(func=_cmd_probe)
+
+    p = sub.add_parser("manifest", help="checksum every file under a directory, for the restore probe")
+    p.add_argument("directory")
+    p.add_argument("-o", "--output", default="manifest.json")
+    p.set_defaults(func=_cmd_manifest)
 
     p = sub.add_parser("log", help="audit log tools")
     logsub = p.add_subparsers(dest="log_command", required=True)
@@ -333,6 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("scan", help="flag likely PHI in text (heuristic)")
     p.add_argument("file", help="file to scan, or - for stdin")
     p.add_argument("--redact", action="store_true", help="print the text with findings masked")
+    p.add_argument("--hidden", action="store_true", help="look for concealed text instead: invisible characters, hidden markup, comments")
     p.set_defaults(func=_cmd_scan)
 
     p = sub.add_parser("report", help="render the assessment")
@@ -355,7 +391,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=_cmd_next)
 
     p = sub.add_parser("predict", help="before a probe runs, record how likely you think it is to come back clean")
-    p.add_argument("probe", choices=["isolation", "agent", "egress", "tls", "log", "stack", "claims"])
+    p.add_argument("probe", choices=PROBES)
     p.add_argument("probability", type=float, help="0 to 1")
     p.add_argument("--by", required=True, help="who is predicting")
     p.add_argument("-a", "--assessment", default="assessment.yaml")
