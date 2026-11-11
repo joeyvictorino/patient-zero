@@ -1,0 +1,3 @@
+# Hosts seen leaving the PHI enclave during a full test run (proxy or flow log export).
+api.model-vendor.example
+phi-bucket.storage.example

@@ -1,0 +1,118 @@
+# Open PHI Safeguard Profile for AI Applications
+# Draft 0.1. Mappings are first-pass and unverified against source text.
+version: "0.1"
+status: draft
+mappings_verified: false
+
+levels:
+  L0:
+    name: Unprivileged
+    summary: No PHI. The product actively keeps PHI out.
+  L1:
+    name: Helper
+    summary: Stores and processes PHI. AI features run only on BAA-covered models. No external assistants and no autonomous outbound actions on PHI.
+  L2:
+    name: Agentic
+    summary: Agents act on PHI and external assistants may connect.
+
+families:
+  GATE:
+    name: Privilege gating
+    principle: PHI is off by default; turning it on is an explicit, recorded act.
+    hipaa: ["164.308(a)(4)", "164.312(a)(1)", "164.502(e)", "164.504(e)"]
+    sp800_53: [AC-3, AC-4, AC-6, CM-7, SC-7]
+    csf: [PR.AA, PR.DS]
+  TRUST:
+    name: Verified chain
+    principle: No party touches PHI without a verified identity and a signed BAA.
+    hipaa: ["164.308(b)(1)", "164.314(a)", "164.502(e)"]
+    sp800_53: [SA-9, SR-3, IA-9, AC-20]
+    csf: [GV.SC]
+  AGENT:
+    name: Agent identity and actions
+    principle: Agents act with their own identity, narrower rights, and confirmation on disclosure.
+    hipaa: ["164.312(a)(1)", "164.312(c)(1)", "164.312(d)", "164.502(b)"]
+    sp800_53: [AC-6, IA-9, AC-4, SI-10, SI-15]
+    csf: [PR.AA, PR.DS]
+  MEMORY:
+    name: Learned context
+    principle: Tenant and user scope is the default boundary for data and memory.
+    hipaa: ["164.502(b)", "164.312(c)(1)", "164.310(d)(2)(i)"]
+    sp800_53: [SC-4, SI-12, MP-6]
+    csf: [PR.DS]
+  LOG:
+    name: Audit
+    principle: Every PHI event is recorded in a log that shows tampering.
+    hipaa: ["164.312(b)", "164.308(a)(1)(ii)(D)"]
+    sp800_53: [AU-2, AU-3, AU-6, AU-9, AU-11, AU-12]
+    csf: [DE.CM, DE.AE]
+  MAP:
+    name: Inventory and risk
+    principle: The operator can enumerate every PHI store, flow and egress.
+    hipaa: ["164.308(a)(1)(ii)(A)", "164.308(a)(1)(ii)(B)"]
+    sp800_53: [RA-3, CM-8, PM-5]
+    csf: [ID.AM, ID.RA, GV.RM]
+  BASE:
+    name: Baseline safeguards
+    principle: The ordinary Security Rule safeguards are in place before anything AI-specific.
+    hipaa: ["164.312(a)(2)", "164.312(d)", "164.312(e)(1)", "164.308(a)(5)", "164.308(a)(6)", "164.308(a)(7)", "164.410", "164.504(e)(2)"]
+    sp800_53: [IA-2, SC-8, SC-12, SC-28, CP-9, CP-10, IR-4, IR-6, AT-2]
+    csf: [PR.AA, PR.DS, PR.AT, RS.MA, RC.RP]
+  TEST:
+    name: Verification
+    principle: Controls are proven by repeatable tests, not by policy text.
+    hipaa: ["164.308(a)(8)"]
+    sp800_53: [CA-2, CA-8, RA-5, SA-11]
+    csf: [ID.RA, ID.IM]
+
+controls:
+  - {id: GATE-1, family: GATE, min_level: L0, keyword: shall, statement: "PHI processing shall be disabled by default for every workspace."}
+  - {id: GATE-2, family: GATE, min_level: L0, keyword: shall, statement: "Enabling PHI shall require an executed BAA on file, approval by a named owner, and an audit record."}
+  - {id: GATE-3, family: GATE, min_level: L0, keyword: shall, statement: "PHI shall be stored and processed in a logically separate enclave with its own encryption keys, logs and access roles."}
+  - {id: GATE-4, family: GATE, min_level: L0, keyword: shall, statement: "When a gate check cannot be completed, the system shall deny PHI access and continue in non-PHI mode."}
+  - {id: GATE-5, family: GATE, min_level: L0, keyword: shall, statement: "Non-PHI workspaces shall tell users not to enter PHI and should detect and quarantine likely PHI on input."}
+
+  - {id: TRUST-1, family: TRUST, min_level: L1, keyword: shall, statement: "The operator shall keep a register of every subprocessor and model endpoint that can receive PHI, with BAA status, retention terms and training-use terms."}
+  - {id: TRUST-2, family: TRUST, min_level: L1, keyword: shall, statement: "The enclave shall send data only to endpoints on an allowlist drawn from that register, enforced at network egress."}
+  - {id: TRUST-3, family: TRUST, min_level: L1, keyword: shall, statement: "Model providers shall be contractually barred from training on PHI, and their retention period shall be documented."}
+  - {id: TRUST-4, family: TRUST, min_level: L1, keyword: shall, statement: "External assistant connections shall authenticate the client application, not only the user. Unverified clients shall be refused in PHI workspaces."}
+  - {id: TRUST-5, family: TRUST, min_level: L1, keyword: shall, statement: "Any change to the register shall trigger a risk review before deployment."}
+
+  - {id: AGENT-1, family: AGENT, min_level: L2, keyword: shall, statement: "Each agent and connected assistant shall have its own identity, distinct from the human user, in every log entry."}
+  - {id: AGENT-2, family: AGENT, min_level: L2, keyword: shall, statement: "Agent permissions shall never exceed the delegating user's and shall default to read-only in PHI workspaces."}
+  - {id: AGENT-3, family: AGENT, min_level: L2, keyword: shall, statement: "Actions that send PHI outside the workspace (email, SMS, export, webhook) or delete records shall require human confirmation that shows recipient and content."}
+  - {id: AGENT-4, family: AGENT, min_level: L2, keyword: shall, statement: "Content from records, documents, web pages and tool results shall be treated as untrusted data. It shall not be able to change an agent's permissions or destinations."}
+  - {id: AGENT-5, family: AGENT, min_level: L2, keyword: shall, statement: "When access is denied or data is missing, the agent shall say so. It shall not generate patient facts."}
+  - {id: AGENT-6, family: AGENT, min_level: L2, keyword: shall, statement: "Agent tokens shall be short-lived, scoped and revocable by the workspace owner, with revocation effective within 15 minutes."}
+  - {id: AGENT-7, family: AGENT, min_level: L2, keyword: shall, statement: "Output leaving the enclave shall pass a minimum-necessary filter."}
+
+  - {id: MEM-1, family: MEMORY, min_level: L1, keyword: shall, statement: "Learned memory, embeddings and caches shall be scoped to one tenant, with no cross-tenant retrieval path."}
+  - {id: MEM-2, family: MEMORY, min_level: L1, keyword: shall, statement: "PHI shall not be used to train or fine-tune shared models."}
+  - {id: MEM-3, family: MEMORY, min_level: L1, keyword: shall, statement: "Every memory item derived from PHI shall be tagged with its source record."}
+  - {id: MEM-4, family: MEMORY, min_level: L1, keyword: shall, statement: "Deleting a record shall remove derived memory, embeddings and cached prompts within the retention schedule."}
+  - {id: MEM-5, family: MEMORY, min_level: L1, keyword: shall, statement: "Prompt and completion logs that contain PHI are PHI and shall receive the same protections."}
+
+  - {id: LOG-1, family: LOG, min_level: L1, keyword: shall, statement: "The system shall record every PHI read, write, export, send, permission change and agent tool call, with user, agent, workspace, time and object."}
+  - {id: LOG-2, family: LOG, min_level: L1, keyword: shall, statement: "The log shall be append-only and tamper-evident (hash chain or write-once storage) under a role separate from application admins."}
+  - {id: LOG-3, family: LOG, min_level: L1, keyword: shall, statement: "Logs shall be retained per policy. Six years is recommended, to match HIPAA documentation retention."}
+  - {id: LOG-4, family: LOG, min_level: L1, keyword: shall, statement: "Logs shall be reviewed on a schedule, with alerts on bulk reads, unusual exports and new connections."}
+  - {id: LOG-5, family: LOG, min_level: L1, keyword: shall, statement: "Customers shall be able to export the log for their own workspace."}
+
+  - {id: MAP-1, family: MAP, min_level: L1, keyword: shall, statement: "The operator shall keep a current inventory of every system, store, queue, log and backup that holds PHI."}
+  - {id: MAP-2, family: MAP, min_level: L1, keyword: shall, statement: "The operator shall keep a data flow map of every PHI path, including model calls and every egress."}
+  - {id: MAP-3, family: MAP, min_level: L1, keyword: shall, statement: "A risk analysis shall be performed at least annually and before any new model, connector or subprocessor goes live."}
+  - {id: MAP-4, family: MAP, min_level: L1, keyword: shall, statement: "Each identified risk shall have an owner, a treatment and a due date."}
+
+  - {id: BASE-1, family: BASE, min_level: L1, keyword: shall, statement: "MFA shall be enforced for all users and administrators of PHI workspaces."}
+  - {id: BASE-2, family: BASE, min_level: L1, keyword: shall, statement: "PHI shall be encrypted in transit (TLS 1.2 or later) and at rest, with keys held in a managed key service per enclave."}
+  - {id: BASE-3, family: BASE, min_level: L1, keyword: shall, statement: "Every user shall have a unique ID. Shared accounts are prohibited and sessions shall time out."}
+  - {id: BASE-4, family: BASE, min_level: L1, keyword: shall, statement: "Backups shall be encrypted and a restore shall be tested at least annually under a written contingency plan."}
+  - {id: BASE-5, family: BASE, min_level: L1, keyword: shall, statement: "An incident response plan shall exist. Breach notice to the covered entity shall meet the BAA term and in no case exceed 60 days from discovery."}
+  - {id: BASE-6, family: BASE, min_level: L1, keyword: shall, statement: "Workforce members shall be trained, provisioned by role and deprovisioned on exit."}
+  - {id: BASE-7, family: BASE, min_level: L1, keyword: shall, statement: "PHI shall be returned or destroyed at contract end, with a destruction record."}
+
+  - {id: TEST-1, family: TEST, min_level: L1, keyword: shall, statement: "Automated cross-tenant access tests shall run against every API route in CI."}
+  - {id: TEST-2, family: TEST, min_level: L1, keyword: shall, statement: "An independent tester shall perform a penetration test at least annually, including AI abuse cases: prompt injection, permission escalation through agents, memory leakage and connector spoofing."}
+  - {id: TEST-3, family: TEST, min_level: L1, keyword: shall, statement: "Vulnerability scans shall run at least every six months, with fix deadlines by severity."}
+  - {id: TEST-4, family: TEST, min_level: L1, keyword: shall, statement: "Evidence for each control shall be collected automatically, dated and kept for the assessor."}
+  - {id: TEST-5, family: TEST, min_level: L2, keyword: shall, statement: "An adversarial test suite shall run before each model, prompt or tool change ships."}

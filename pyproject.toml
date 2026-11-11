@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "patient-zero"
+version = "0.1.0"
+description = "Open PHI safeguard profile for AI applications: machine-readable controls, reference safeguards, and probes."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Joey Victorino" }]
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+pz = "patient_zero.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["patient_zero*"]
+
+[tool.setuptools.package-data]
+patient_zero = ["data/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

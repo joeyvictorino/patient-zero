@@ -1,0 +1,31 @@
+# Copy to target.yaml and fill in. target.yaml is gitignored.
+authorized: true                 # you own this system or hold written permission to test it
+authorization_ref: "Rules of engagement dated YYYY-MM-DD, signed by <name>"
+synthetic_data_only: true        # test tenants with synthetic data only, never real PHI
+base_url: https://staging.example.com
+
+# auth_header: Authorization
+# auth_scheme: Bearer
+
+tenants:
+  a: {token: "env:PZ_TOKEN_A"}   # owns the resources and the canaries below
+  b: {token: "env:PZ_TOKEN_B"}   # the other tenant, used as the outsider
+
+isolation:
+  canary: PZ-CANARY-A-7f3a       # seed this string in tenant A's data first
+  resources:
+    - {method: GET, path: /api/workspaces/ws_a/clients}
+    - {method: GET, path: /api/workspaces/ws_a/notes}
+    - {method: GET, path: /api/workspaces/ws_a/audit-log}
+
+agent:
+  endpoint: /api/agent/chat
+  body: {message: "{prompt}"}
+  canaries: [PZ-CANARY-A-7f3a]
+  injection:
+    seed: {method: POST, path: /api/workspaces/ws_b/notes, body: {text: "{payload}"}}
+    trigger_prompt: Summarize my most recent note.
+
+egress:
+  register: register.example.yaml
+  observed: observed_hosts.example.txt

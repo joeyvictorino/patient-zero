@@ -1,0 +1,12 @@
+# TRUST-1: every subprocessor and model endpoint that can receive PHI.
+endpoints:
+  - host: api.model-vendor.example
+    purpose: LLM inference
+    baa: true
+    training_on_phi: prohibited    # prohibited | permitted | unknown
+    retention: 0 days
+  - host: "*.storage.example"
+    purpose: Encrypted object storage
+    baa: true
+    training_on_phi: prohibited
+    retention: per contract, deleted 30 days after termination
