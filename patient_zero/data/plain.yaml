@@ -1,0 +1,174 @@
+# Plain-language version of every control, for people who buy AI tools rather than build them.
+# plain: what the control means.  ask: the question to put to a vendor.  proof: what a good answer comes with.
+GATE-1:
+  plain: The product does not touch patient information unless someone deliberately turns that on.
+  ask: Is patient data off by default in your product, and what exactly turns it on?
+  proof: A screenshot or setting export showing a new workspace with patient data disabled.
+GATE-2:
+  plain: Patient data is only switched on after a signed Business Associate Agreement, by a named person, with a record kept.
+  ask: Will you sign a Business Associate Agreement before we send any patient data, and who on your side approves switching it on?
+  proof: Their BAA template, and a sample of the record made when patient data is enabled.
+GATE-3:
+  plain: Our patients' data is walled off from every other customer's data.
+  ask: How is our data kept separate from your other customers', and have you tested that one customer cannot read another's?
+  proof: Results of a cross-customer access test, dated, for the current release.
+GATE-4:
+  plain: If the safety check breaks, the product refuses patient data instead of letting it through.
+  ask: If your system cannot confirm we have a signed agreement, what happens to a request involving patient data?
+  proof: A test result showing access is denied when the check fails.
+GATE-5:
+  plain: Parts of the product not approved for patient data warn staff and try to catch patient data entered by mistake.
+  ask: What stops our staff from pasting patient details into a part of your product that is not covered by our agreement?
+  proof: The warning staff see, and how flagged entries are handled.
+TRUST-1:
+  plain: The vendor keeps a list of every other company that can receive our patients' data.
+  ask: Which other companies, including AI model providers, can receive our patient data, and do you have a signed agreement with each?
+  proof: The current list with agreement status for each company.
+TRUST-2:
+  plain: Patient data can only be sent to the companies on that list, and this is enforced by the system, not by policy.
+  ask: What technically prevents patient data from being sent to a company that is not on your list?
+  proof: A comparison of where data actually went during a test against the approved list.
+TRUST-3:
+  plain: AI model companies are barred by contract from training on our patients' data, and we know how long they keep it.
+  ask: Can your AI provider train on our patient data, and how long do they keep it?
+  proof: The contract clause, and the retention period in writing.
+TRUST-4:
+  plain: Outside AI assistants cannot connect to patient data unless the vendor has verified which application is connecting.
+  ask: Can staff connect an outside AI assistant, such as a personal chatbot account, to our patient data?
+  proof: The list of assistants allowed for patient data, and what happens when an unlisted one tries.
+TRUST-5:
+  plain: Adding a new outside company triggers a risk review before it goes live.
+  ask: When you add a new AI provider or subcontractor, what review happens first, and will you tell us?
+  proof: The review record from the last time they added one.
+AGENT-1:
+  plain: When the AI does something, the record shows it was the AI, not just the staff member it was working for.
+  ask: If your AI assistant reads or sends a patient record, does your log show the AI did it, separately from the staff member?
+  proof: A sample log entry showing both names.
+AGENT-2:
+  plain: The AI can never do more than the staff member it works for, and it can only read, not change, unless given more.
+  ask: Can your AI assistant see or do anything the staff member using it could not?
+  proof: A test where a limited account's assistant attempts something it should not.
+AGENT-3:
+  plain: Before the AI sends patient information outside the practice or deletes anything, a person sees exactly what and to whom, and approves it.
+  ask: Can your AI send a message containing patient information, or delete a record, without a person approving that exact message first?
+  proof: The approval screen, and a test showing a changed message is blocked.
+AGENT-4:
+  plain: Text inside a record or document cannot hijack the AI into doing something else.
+  ask: If a document we upload contains hidden instructions to your AI, what happens?
+  proof: Results of a test that plants an instruction in a record.
+AGENT-5:
+  plain: When the AI cannot get information, it says so. It does not make up facts about a patient.
+  ask: When your AI does not have a piece of patient information, does it say so or guess?
+  proof: Examples of its response when information is missing or access is denied.
+AGENT-6:
+  plain: The AI's access expires quickly and we can cut it off within minutes.
+  ask: How fast can we shut off an AI assistant's access if something goes wrong?
+  proof: The control we would use, and the time it takes to take effect.
+AGENT-7:
+  plain: The AI shares only the minimum information needed, not the whole chart.
+  ask: When your AI produces a summary or message, what limits it to the minimum necessary information?
+  proof: The list of fields allowed to leave, and a test showing others are dropped.
+MEM-1:
+  plain: What the AI learns from our patients stays with us and can never surface for another customer.
+  ask: Does your AI remember things from our data, and could anything it learned appear in another customer's answers?
+  proof: Results of a test that plants a unique marker in one customer and looks for it from another.
+MEM-2:
+  plain: Our patients' data is not used to train AI models shared with others.
+  ask: Do you use our patient data to train or improve any model that other customers use?
+  proof: A written commitment, and the same from their AI provider.
+MEM-3:
+  plain: Anything the AI derives from a patient record can be traced back to that record.
+  ask: If your AI stores a note or memory derived from a patient record, can you tell which record it came from?
+  proof: A sample of stored memory showing its source.
+MEM-4:
+  plain: When we delete a record, what the AI learned from it is deleted too.
+  ask: When we delete a patient record, is everything your AI derived from it deleted as well, and how soon?
+  proof: The deletion timeline, and a test that searches for a deleted record afterward.
+MEM-5:
+  plain: Saved AI conversations that contain patient information are protected like any other patient record.
+  ask: Where are AI prompts and replies stored, who can see them, and are they protected as patient records?
+  proof: Storage location, access list and retention for conversation logs.
+LOG-1:
+  plain: Every time patient data is viewed, changed, exported or sent, there is a record of who, what and when.
+  ask: Can you show us every access to a given patient's record, including by AI?
+  proof: A sample access report for one test record.
+LOG-2:
+  plain: That record cannot be quietly altered, even by the vendor's own administrators.
+  ask: Could one of your administrators edit or delete an entry in the access log without anyone knowing?
+  proof: How the log is protected, and a verification result.
+LOG-3:
+  plain: Logs are kept long enough to investigate a problem discovered years later.
+  ask: How long do you keep access logs?
+  proof: The retention policy. Six years matches HIPAA documentation rules.
+LOG-4:
+  plain: Someone actually reviews the logs, and unusual activity raises an alarm.
+  ask: Who reviews access logs, how often, and what triggers an alert?
+  proof: The review schedule and a list of alert rules.
+LOG-5:
+  plain: We can get the access log for our own data whenever we ask.
+  ask: Can we export the access log for our own data ourselves?
+  proof: A sample export.
+MAP-1:
+  plain: The vendor knows every place our patients' data is stored, including backups and logs.
+  ask: Where, exactly, is our patient data stored, including backups, logs and AI memory?
+  proof: Their inventory of systems holding patient data.
+MAP-2:
+  plain: The vendor has a map of everywhere patient data travels, including to AI models.
+  ask: Can you show us a diagram of where our patient data goes, including outside your company?
+  proof: The data flow diagram.
+MAP-3:
+  plain: The vendor reassesses risk every year and before adding any new AI model or partner.
+  ask: When was your last security risk analysis, and do you redo it before adding a new AI model?
+  proof: The date and summary of the last analysis.
+MAP-4:
+  plain: Every known risk has an owner, a plan and a deadline.
+  ask: For the risks you have found, who owns each one and when will it be fixed?
+  proof: The risk register, with sensitive detail removed.
+BASE-1:
+  plain: Everyone who can reach patient data must use a second login step.
+  ask: Is multi-factor login required for every user and administrator, with no exceptions?
+  proof: The setting that enforces it.
+BASE-2:
+  plain: Patient data is encrypted when stored and when moving.
+  ask: Is our patient data encrypted in storage and in transit, and who holds the keys?
+  proof: Encryption settings and a transport scan result.
+BASE-3:
+  plain: Every person has their own login. No shared accounts. Idle sessions sign out.
+  ask: Do you allow shared logins, and how long before an idle session signs out?
+  proof: Account policy and timeout setting.
+BASE-4:
+  plain: Backups exist, are encrypted, and have actually been restored in a test.
+  ask: When did you last restore our kind of data from backup as a test, and did it match?
+  proof: The dated restore test result.
+BASE-5:
+  plain: There is a plan for a breach, and we will be told quickly.
+  ask: If our patient data is breached, how soon will you tell us?
+  proof: The notification term in the BAA. The legal limit is 60 days; ask for much less.
+BASE-6:
+  plain: The vendor's staff are trained, have only the access their job needs, and lose it when they leave.
+  ask: Which of your staff can see our patient data, and how fast is access removed when someone leaves?
+  proof: Role list and offboarding procedure.
+BASE-7:
+  plain: When the contract ends, our patient data is returned or destroyed, with proof.
+  ask: What happens to our patient data when we stop using your product?
+  proof: The return or destruction clause, and a sample destruction certificate.
+TEST-1:
+  plain: The wall between customers is tested automatically every time the software changes.
+  ask: Do you automatically test, on every release, that one customer cannot read another's data?
+  proof: Recent test run results.
+TEST-2:
+  plain: An independent tester attacks the product at least once a year, including its AI features.
+  ask: When was your last independent penetration test, and did it cover the AI features?
+  proof: The summary letter from the testing firm, with the date.
+TEST-3:
+  plain: The product is scanned for known weaknesses at least twice a year and fixes have deadlines.
+  ask: How often do you scan for vulnerabilities, and how fast must serious ones be fixed?
+  proof: Scan schedule and fix deadlines.
+TEST-4:
+  plain: The vendor can hand over dated proof for each of these answers.
+  ask: Can you give us dated evidence for your answers, in a form we can verify was not edited afterward?
+  proof: A signed evidence bundle.
+TEST-5:
+  plain: Each time the AI model or its instructions change, it is retested against attacks before release.
+  ask: When you change the AI model or its instructions, what testing happens before our staff use it?
+  proof: Results from the test run before the last model change.

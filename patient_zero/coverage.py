@@ -29,6 +29,12 @@ SAFEGUARD_CONTROLS: Dict[str, List[str]] = {
     "embedded": ["TEST-1"],
 }
 
+# Not safeguards a vendor adopts, but part of the package: the buyer's side.
+BUYER_TOOLS = {
+    "buyer": "vendor questionnaire and plain-language summary",
+    "nevada": "care-claims scan for Nevada AB 406",
+}
+
 
 def rows(profile: Profile) -> List[Dict[str, object]]:
     out = []

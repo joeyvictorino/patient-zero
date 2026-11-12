@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 import yaml
 
-from .. import assess, bayes, profile as profile_mod, replay as replay_mod, seal as seal_mod
+from .. import assess, bayes, buyer, profile as profile_mod, replay as replay_mod, seal as seal_mod
 from ..policy import ActionGate, Policy, Proposal
 from ..auditlog import AuditLog
 from ..probes import agent, isolation, offline, stack, write_evidence
@@ -141,6 +141,12 @@ def run(out=print) -> int:
         out("\n  belief that each tested control holds:")
         for line in _belief_lines(data, prof, model, touched):
             out(line)
+
+        out("\n  the same result, for the person who has to decide:")
+        report = buyer.executive_summary(data, prof).splitlines()
+        out("  " + next(line for line in report if line.startswith("**Bottom line")).replace("**", ""))
+        for line in [x for x in report if x.startswith("- **")][:2]:
+            out("  " + line.replace("**", "").split(" What the test found")[0])
 
         touched = _investigate("patched", False, data, workdir, out)
         out("\n  belief after the same probes come back clean:")

@@ -22,7 +22,7 @@ pz = "patient_zero.cli:main"
 include = ["patient_zero*"]
 
 [tool.setuptools.package-data]
-patient_zero = ["data/*.yaml"]
+patient_zero = ["data/*.yaml", "data/overlays/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -34,3 +34,5 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "UP006", "UP007"]
 ignore = ["E731", "UP006", "UP007"]
+[tool.ruff.lint.per-file-ignores]
+"patient_zero/nevada.py" = ["E501"]  # one pattern per line reads better than wrapped regexes

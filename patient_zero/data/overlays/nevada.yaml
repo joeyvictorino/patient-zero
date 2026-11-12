@@ -1,0 +1,54 @@
+# Nevada overlay. State requirements that sit on top of HIPAA for AI products used in Nevada.
+# Summaries are the author's reading of the enrolled bills and are not legal advice. Confirm with Nevada counsel.
+name: Nevada
+checked: "2026-11-11"
+laws:
+  AB406:
+    title: Assembly Bill 406 (2025), artificial intelligence in mental and behavioral health care
+    effective: "2025-07-01"
+    source: https://archive.leg.state.nv.us/Session/83rd2025/Bills/AB/AB406_EN.pdf
+  SB370:
+    title: Senate Bill 370 (2023), consumer health data, NRS 603A.500 to 603A.590
+    effective: "2024-03-31"
+    source: https://dwt.com/gcp/state-privacy-laws-tracker/broad-state-privacy-law-tracker/nevada
+items:
+  - id: NV-1
+    law: AB406
+    cite: "sec. 7(1)"
+    applies: every AI product offered to people in Nevada
+    statement: The product, its marketing and anything the AI itself says shall not represent that the AI can provide professional mental or behavioral health care, that talking to it is a way to obtain such care, or that it is a therapist, counselor, psychiatrist, doctor or similar provider.
+    plain: The AI must never present itself as a therapist or counselor, or as a way to get therapy.
+    ask: Does your product, its website or the AI itself ever describe the AI as a therapist, counselor or source of mental health treatment?
+    proof: Marketing copy and in-product text for the AI features. `pz scan --care-claims` checks text for these representations.
+  - id: NV-2
+    law: AB406
+    cite: "sec. 7(2)"
+    applies: every AI product offered to people in Nevada
+    statement: The product shall not offer an AI system specifically programmed to provide a service that would be professional mental or behavioral health care if a person provided it.
+    plain: The AI must not be built to diagnose, treat or counsel mental or behavioral health conditions.
+    ask: Is any AI feature designed to assess, diagnose, treat or counsel a mental or behavioral health condition?
+    proof: A written description of what each AI feature is designed to do.
+  - id: NV-3
+    law: AB406
+    cite: "sec. 8(1), 8(2)"
+    applies: products sold to mental and behavioral health providers in Nevada
+    statement: AI features used by a mental or behavioral health provider shall be limited to administrative support such as scheduling, managing records, billing, analyzing operational data, and organizing or managing session files and notes, and shall not be used in providing care directly to a patient.
+    plain: For therapists and counselors, the AI may help with scheduling, records, billing and notes. It may not take part in care itself.
+    ask: Which tasks does your AI perform for a behavioral health practice, and does any of them involve the AI interacting with a patient as part of care?
+    proof: The feature list for behavioral health customers, mapped to the administrative tasks the law names.
+  - id: NV-4
+    law: AB406
+    cite: "sec. 8(4)"
+    applies: products sold to mental and behavioral health providers in Nevada
+    statement: The product shall give the provider a way to independently review, before use, anything the AI compiles, summarizes or generates for billing or for session notes.
+    plain: A therapist must be able to check AI-written billing and session notes before they are used.
+    ask: Before an AI-drafted session note or bill is saved or sent, does the clinician see it and approve it?
+    proof: The review screen, and whether unreviewed AI output can reach the record.
+  - id: NV-5
+    law: SB370
+    cite: "NRS 603A.500 to 603A.590"
+    applies: health-related data the vendor handles outside HIPAA, such as website visitors, app users who are not yet patients, and wellness features
+    statement: Where the vendor handles consumer health data that HIPAA does not cover, it shall state whether it is exempt as an entity subject to HIPAA, and if not, shall publish a consumer health data privacy policy, obtain consent before collecting or sharing, honor requests to stop and to delete, and keep such data out of geofencing around health care facilities.
+    plain: Health information about people who are not yet our patients, such as website visitors, is covered by a separate Nevada law unless the vendor is exempt.
+    ask: Do you collect health-related information about people before they become our patients, and how do you comply with Nevada's consumer health data law for it?
+    proof: Their consumer health data privacy policy, or their written basis for exemption.

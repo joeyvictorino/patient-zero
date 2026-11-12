@@ -70,6 +70,16 @@ pz demo
 
 Look at the belief block. Every probe came back clean and belief barely moved. Three requests that found nothing are not proof of tenant isolation, and the score says so.
 
+## If you buy AI tools rather than build them
+
+You run a practice, a clinic or a health system, and a vendor wants your patient data. You do not need to read the rest of this page.
+
+- [One page for healthcare leaders](docs/FOR-HEALTHCARE-LEADERS.md) ([en español](docs/PARA-LIDERES-DE-SALUD.md))
+- [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 43 safeguards in plain language, each with the question to ask and what a good answer comes with
+- [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, and SB 370 on consumer health data
+
+A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and a signed evidence bundle.
+
 ## Why this exists
 
 Getting an AI product into a clinic costs months and a consultant before anyone has tested anything. Small teams with useful tools give up, and healthcare keeps its fax machines. Most of that cost is working out what to check and how to show you checked it. That part can be open source.
@@ -231,6 +241,9 @@ pz fragile                                       # which source you lean on most
 pz calibration                                   # how good the forecasts were, yours and the model's
 pz replay evidence/<file>.json                   # re-derive a finding offline
 pz report --html -o report.html                  # hand this to a customer
+pz report --executive                            # one page in plain language for the decision maker
+pz questionnaire --level L1 --overlay nevada     # what a buyer will ask you
+pz scan site-copy.txt --care-claims              # wording that presents an AI as a therapist (Nevada AB 406)
 pz report --strict                               # exit 1 unless conformant, for CI
 ```
 

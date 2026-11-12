@@ -11,9 +11,11 @@ from . import (
     assess,
     auditlog,
     bayes,
+    buyer,
     coverage,
     hidden,
     html,
+    nevada,
     phi,
     profile as profile_mod,
     replay as replay_mod,
@@ -67,6 +69,21 @@ def _cmd_coverage(args) -> int:
     s = coverage.summary(prof)
     print(f"\n{s['probes']} probes touch {s['probed']} of {s['controls']} controls; {s['with_reference_code']} have reference code; "
           f"{s['manual_only']} are manual only")
+    return EXIT_OK
+
+
+def _cmd_questionnaire(args) -> int:
+    sys.stdout.write(buyer.questionnaire(profile_mod.load(args.profile), args.level, args.overlay))
+    return EXIT_OK
+
+
+def _cmd_overlay(args) -> int:
+    if args.markdown:
+        sys.stdout.write(buyer.overlay_markdown(args.name))
+        return EXIT_OK
+    data = buyer.load_overlay(args.name)
+    for item in data["items"]:
+        print(f"{item['id']:<6} {item['law']} {item['cite']:<12} {item['plain']}")
     return EXIT_OK
 
 
@@ -158,6 +175,14 @@ def _cmd_log(args) -> int:
 
 def _cmd_scan(args) -> int:
     text = sys.stdin.read() if args.file == "-" else open(args.file, "r", encoding="utf-8").read()
+    if args.care_claims:
+        claims = nevada.scan_claims(text)
+        hits = [c for c in claims if c.kind != "disclaimer"]
+        print(f"care claims: {len(hits)} to review, {len(claims) - len(hits)} disclaimer(s)")
+        for c in hits:
+            print(f"  [{c.kind}] {c.sentence[:200]}")
+        print("A phrase scan for Nevada AB 406 sec. 7(1). A hit needs a person to read it; no hit is not a legal clearance.")
+        return EXIT_FINDINGS if hits else EXIT_OK
     if args.hidden:
         concealed = hidden.scan(text)
         kinds = {}
@@ -184,6 +209,8 @@ def _cmd_report(args) -> int:
     data = assess.load(args.assessment)
     if args.json:
         text = json.dumps(assess.summarize(data, prof), indent=2) + "\n"
+    elif args.executive:
+        text = buyer.executive_summary(data, prof)
     elif args.html:
         text = html.render(data, prof, bayes.load_model(args.model))
     else:
@@ -363,6 +390,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=_cmd_coverage)
 
+    p = sub.add_parser("questionnaire", help="plain-language questions for a buyer to send an AI vendor")
+    p.add_argument("--level", choices=profile_mod.LEVELS, default="L1")
+    p.add_argument("--overlay", choices=buyer.overlays(), help="add a state's requirements")
+    p.set_defaults(func=_cmd_questionnaire)
+
+    p = sub.add_parser("overlay", help="state requirements on top of HIPAA")
+    p.add_argument("name", choices=buyer.overlays())
+    p.add_argument("--markdown", action="store_true")
+    p.set_defaults(func=_cmd_overlay)
+
     p = sub.add_parser("init", help="start an assessment file")
     p.add_argument("--product", required=True)
     p.add_argument("--level", required=True, choices=profile_mod.LEVELS)
@@ -406,6 +443,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("scan", help="flag likely PHI in text (heuristic)")
     p.add_argument("file", help="file to scan, or - for stdin")
     p.add_argument("--redact", action="store_true", help="print the text with findings masked")
+    p.add_argument("--care-claims", action="store_true",
+                   help="look for wording that presents an AI as a therapist or as mental health care (Nevada AB 406)")
     p.add_argument("--hidden", action="store_true", help="look for concealed text instead: invisible characters, hidden markup, comments")
     p.set_defaults(func=_cmd_scan)
 
@@ -414,6 +453,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-o", "--output")
     p.add_argument("--json", action="store_true", help="summary as JSON")
     p.add_argument("--html", action="store_true", help="self-contained HTML with belief per control")
+    p.add_argument("--executive", action="store_true", help="one page in plain language for a decision maker")
     p.add_argument("--strict", action="store_true", help="exit 1 unless conformant")
     p.set_defaults(func=_cmd_report)
 
