@@ -125,3 +125,18 @@ def test_leader_briefs_exist_in_both_languages_and_make_no_certification_claim()
     assert "It is not a HIPAA certification" in en and "No es una certificación de HIPAA" in es
     assert "43 safeguards" in en and "43 salvaguardas" in es
     assert len(en.split()) < 450
+
+
+def test_brief_demo_is_short_plain_and_true():
+    from patient_zero.demo import run as demo_run
+
+    lines = []
+    assert demo_run.run_brief(out=lines.append) == 0
+    text = "\n".join(lines)
+    assert "NOT READY. 5 of 43 safeguards failed a test:" in text
+    assert "All 5 now test clean, and 0 safeguards are failing." in text
+    assert "0 of 43 are confirmed" in text
+    assert "Seal checks out: yes." in text and "Caught: yes." in text
+    assert len(text.splitlines()) <= 26 and max(len(line) for line in text.splitlines()) <= 80
+    for word in ("GATE-3", "tenant", "Merkle", "Ed25519"):
+        assert word not in text

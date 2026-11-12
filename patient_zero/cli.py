@@ -365,9 +365,9 @@ def _cmd_demo(args) -> int:
 
         serve(args.port, vulnerable=not args.patched)
         return EXIT_OK
-    from .demo.run import run
+    from .demo.run import run, run_brief
 
-    return run()
+    return run_brief() if args.brief else run()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -523,6 +523,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=_cmd_verify_proof)
 
     p = sub.add_parser("demo", help="investigate the bundled Leaky Clinic app, offline")
+    p.add_argument("--brief", action="store_true", help="the short version in plain language")
     p.add_argument("--serve", action="store_true", help="just run the demo app so you can probe it yourself")
     p.add_argument("--patched", action="store_true", help="with --serve, run the patched build")
     p.add_argument("--port", type=int, default=8099)

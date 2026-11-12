@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+import textwrap
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
@@ -189,4 +190,46 @@ def run(out=print) -> int:
     for a in bayes.next_actions(data, prof, model, top=5):
         out(f"  {a['control']:<8} {a['action']:<38} {a['bits']:.2f} bits")
     out("\nNext: pz init --product <yours> --level L1, then point the probes at your own staging environment.")
+    return 0
+
+
+def run_brief(out=print) -> int:
+    """The same investigation in plain language, short enough to read on a phone."""
+    prof = profile_mod.load()
+    plain = buyer.load_plain()
+    data = assess.new("Leaky Clinic", "L2", prof)
+    total = len(data["controls"])
+    quiet = lambda line: None
+
+    def statuses(status):
+        return [cid for cid, entry in data["controls"].items() if entry["status"] == status]
+
+    out('Testing "Leaky Clinic", a deliberately broken AI app for a medical office.')
+    out("Synthetic data only. Everything runs on this machine.")
+    with tempfile.TemporaryDirectory(prefix="pz-demo-") as workdir:
+        _investigate("vulnerable", True, data, workdir, quiet)
+        failed = statuses("fail")
+        out("\nBEFORE THE FIX")
+        out(f"  NOT READY. {len(failed)} of {total} safeguards failed a test:")
+        for cid in failed:
+            out(textwrap.fill(plain[cid]["plain"], width=78, initial_indent="  x  ", subsequent_indent="     "))
+
+        _investigate("patched", False, data, workdir, quiet)
+        out("\nAFTER THE FIX")
+        out(f"  All {len(failed)} now test clean, and {len(statuses('fail'))} safeguards are failing.")
+        out(f"  Still not approved: {len(statuses('pass'))} of {total} are confirmed. A clean test is not a pass.")
+        out("  A named person has to check the evidence and sign each one.")
+
+        a_path, key, sealed = (os.path.join(workdir, n) for n in ("assessment.yaml", "demo.key", "seal.json"))
+        assess.save(data, a_path)
+        seal_mod.keygen(key)
+        head = seal_mod.seal(a_path, key, sealed, signer_name="demo")["head"]
+        intact = not seal_mod.verify_seal(sealed)
+        victim = os.path.join(workdir, [i for i in seal_mod.collect(a_path, workdir) if i.startswith("evidence")][0])
+        with open(victim, "a", encoding="utf-8") as fh:
+            fh.write(" ")
+        caught = bool(seal_mod.verify_seal(sealed))
+        out("\nTHE EVIDENCE")
+        out(f"  {head['item_count']} files sealed and signed. Seal checks out: {'yes' if intact else 'NO'}.")
+        out(f"  One file altered afterward. Caught: {'yes' if caught else 'NO'}.")
     return 0

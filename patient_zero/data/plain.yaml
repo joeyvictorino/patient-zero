@@ -25,7 +25,7 @@ TRUST-1:
   ask: Which other companies, including AI model providers, can receive our patient data, and do you have a signed agreement with each?
   proof: The current list with agreement status for each company.
 TRUST-2:
-  plain: Patient data can only be sent to the companies on that list, and this is enforced by the system, not by policy.
+  plain: Patient data can only be sent to approved companies, and the system enforces this, not just a policy.
   ask: What technically prevents patient data from being sent to a company that is not on your list?
   proof: A comparison of where data actually went during a test against the approved list.
 TRUST-3:
@@ -93,11 +93,11 @@ LOG-1:
   ask: Can you show us every access to a given patient's record, including by AI?
   proof: A sample access report for one test record.
 LOG-2:
-  plain: That record cannot be quietly altered, even by the vendor's own administrators.
+  plain: The record of who accessed patient data cannot be quietly altered, even by the vendor's own administrators.
   ask: Could one of your administrators edit or delete an entry in the access log without anyone knowing?
   proof: How the log is protected, and a verification result.
 LOG-3:
-  plain: Logs are kept long enough to investigate a problem discovered years later.
+  plain: Access records are kept long enough to investigate a problem discovered years later.
   ask: How long do you keep access logs?
   proof: The retention policy. Six years matches HIPAA documentation rules.
 LOG-4:

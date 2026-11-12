@@ -11,6 +11,12 @@ pz demo
 
 `pz demo` starts a deliberately broken AI app on localhost, investigates it, patches it, and investigates again. It needs no network, no account and no API key.
 
+The short version, in plain language (`pz demo --brief`):
+
+![pz demo --brief](docs/demo.gif)
+
+The full run:
+
 ```
 == before any test: write the prediction down ==
   isolation  the team says 90% it comes back clean; the model says 65%

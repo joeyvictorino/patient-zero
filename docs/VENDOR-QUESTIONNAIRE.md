@@ -21,7 +21,7 @@ How to use it: send the list, ask for written answers with the evidence attached
 | # | What it means | Ask the vendor | A good answer comes with |
 | --- | --- | --- | --- |
 | 6 (TRUST-1) | The vendor keeps a list of every other company that can receive our patients' data. | Which other companies, including AI model providers, can receive our patient data, and do you have a signed agreement with each? | The current list with agreement status for each company. |
-| 7 (TRUST-2) | Patient data can only be sent to the companies on that list, and this is enforced by the system, not by policy. | What technically prevents patient data from being sent to a company that is not on your list? | A comparison of where data actually went during a test against the approved list. |
+| 7 (TRUST-2) | Patient data can only be sent to approved companies, and the system enforces this, not just a policy. | What technically prevents patient data from being sent to a company that is not on your list? | A comparison of where data actually went during a test against the approved list. |
 | 8 (TRUST-3) | AI model companies are barred by contract from training on our patients' data, and we know how long they keep it. | Can your AI provider train on our patient data, and how long do they keep it? | The contract clause, and the retention period in writing. |
 | 9 (TRUST-4) | Outside AI assistants cannot connect to patient data unless the vendor has verified which application is connecting. | Can staff connect an outside AI assistant, such as a personal chatbot account, to our patient data? | The list of assistants allowed for patient data, and what happens when an unlisted one tries. |
 | 10 (TRUST-5) | Adding a new outside company triggers a risk review before it goes live. | When you add a new AI provider or subcontractor, what review happens first, and will you tell us? | The review record from the last time they added one. |
@@ -41,8 +41,8 @@ How to use it: send the list, ask for written answers with the evidence attached
 | # | What it means | Ask the vendor | A good answer comes with |
 | --- | --- | --- | --- |
 | 16 (LOG-1) | Every time patient data is viewed, changed, exported or sent, there is a record of who, what and when. | Can you show us every access to a given patient's record, including by AI? | A sample access report for one test record. |
-| 17 (LOG-2) | That record cannot be quietly altered, even by the vendor's own administrators. | Could one of your administrators edit or delete an entry in the access log without anyone knowing? | How the log is protected, and a verification result. |
-| 18 (LOG-3) | Logs are kept long enough to investigate a problem discovered years later. | How long do you keep access logs? | The retention policy. Six years matches HIPAA documentation rules. |
+| 17 (LOG-2) | The record of who accessed patient data cannot be quietly altered, even by the vendor's own administrators. | Could one of your administrators edit or delete an entry in the access log without anyone knowing? | How the log is protected, and a verification result. |
+| 18 (LOG-3) | Access records are kept long enough to investigate a problem discovered years later. | How long do you keep access logs? | The retention policy. Six years matches HIPAA documentation rules. |
 | 19 (LOG-4) | Someone actually reviews the logs, and unusual activity raises an alarm. | Who reviews access logs, how often, and what triggers an alert? | The review schedule and a list of alert rules. |
 | 20 (LOG-5) | We can get the access log for our own data whenever we ask. | Can we export the access log for our own data ourselves? | A sample export. |
 
