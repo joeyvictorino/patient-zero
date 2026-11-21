@@ -2,10 +2,13 @@
 authorized: true                 # you own this system or hold written permission to test it
 authorization_ref: "Rules of engagement dated YYYY-MM-DD, signed by <name>"
 synthetic_data_only: true        # test tenants with synthetic data only, never real PHI
+authorized_hosts:                # copy these from the rules of engagement; base_url must be one of them
+  - staging.example.com          # "*.staging.example.com" covers subdomains, not the bare domain
 base_url: https://staging.example.com
 build: "2026.11.0"               # optional: the release under test; evidence from other builds counts for less
 
-# user_agent: "MyApp/3.2"        # match your real clients if the target treats test traffic differently
+# user_agent: "MyApp/3.2"        # match your real clients if the target treats test traffic differently.
+#                                # Say so in the rules of engagement: the owner should know the test will not look like a test.
 # auth_header: Authorization
 # auth_scheme: Bearer
 

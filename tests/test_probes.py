@@ -20,7 +20,7 @@ def write_target(tmp_path, server, **overrides):
     return str(path)
 
 
-@pytest.mark.parametrize("missing", ["authorized", "synthetic_data_only", "authorization_ref"])
+@pytest.mark.parametrize("missing", ["authorized", "synthetic_data_only", "authorization_ref", "authorized_hosts"])
 def test_probes_refuse_without_authorization(tmp_path, fixed_server, missing):
     target = target_for(fixed_server)
     target.pop(missing)
@@ -28,6 +28,23 @@ def test_probes_refuse_without_authorization(tmp_path, fixed_server, missing):
     path.write_text(yaml.safe_dump(target))
     with pytest.raises(ProbeRefused):
         load_target(str(path))
+
+
+@pytest.mark.parametrize("hosts", [["staging.example.com"], ["*.127.0.0.1"], [""], "127.0.0.1"])
+def test_probes_refuse_a_base_url_outside_the_authorized_hosts(tmp_path, fixed_server, hosts):
+    path = write_target(tmp_path, fixed_server, authorized_hosts=hosts)
+    with pytest.raises(ProbeRefused):
+        load_target(path)
+
+
+def test_host_scope_matching():
+    from patient_zero.probes.common import host_in_scope
+
+    assert host_in_scope("staging.example.com", ["staging.example.com"])
+    assert host_in_scope("API.staging.example.com", ["*.staging.example.com"])
+    assert not host_in_scope("staging.example.com", ["*.staging.example.com"])
+    assert not host_in_scope("evilstaging.example.com", ["*.staging.example.com"])
+    assert not host_in_scope("staging.example.com.evil.net", ["staging.example.com"])
 
 
 def test_requests_stay_on_the_declared_target(fixed_server):

@@ -2,7 +2,7 @@
 
 Every AI app that touches PHI is patient zero. We run the outbreak investigation.
 
-An open safeguard profile for AI apps that handle protected health information, shipped as code: 43 testable controls, drop-in reference safeguards, nine probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence you can disclose one file at a time.
+An open safeguard profile for AI apps that handle protected health information, shipped as code: 51 testable controls, drop-in reference safeguards, nine probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence you can disclose one file at a time.
 
 ```
 pip install git+https://github.com/joeyvictorino/patient-zero
@@ -81,8 +81,8 @@ Look at the belief block. Every probe came back clean and belief barely moved. T
 You run a practice, a clinic or a health system, and a vendor wants your patient data. You do not need to read the rest of this page.
 
 - [One page for healthcare leaders](docs/FOR-HEALTHCARE-LEADERS.md) ([en español](docs/PARA-LIDERES-DE-SALUD.md))
-- [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 43 safeguards in plain language, each with the question to ask and what a good answer comes with
-- [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, and SB 370 on consumer health data
+- [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 51 safeguards in plain language, each with the question to ask and what a good answer comes with
+- [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, SB 370 on consumer health data, and consent before recording a call
 
 A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and a signed evidence bundle.
 
@@ -186,7 +186,7 @@ The Merkle tree and the Ed25519 implementation are standard library only, checke
 
 The full text is in [`docs/PROFILE.md`](docs/PROFILE.md), generated from the data file.
 
-[`patient_zero/data/controls.yaml`](patient_zero/data/controls.yaml) holds eight families. Levels are cumulative and declared per workspace.
+[`patient_zero/data/controls.yaml`](patient_zero/data/controls.yaml) holds nine families. Levels are cumulative and declared per workspace.
 
 | Family | Principle |
 | --- | --- |
@@ -198,12 +198,13 @@ The full text is in [`docs/PROFILE.md`](docs/PROFILE.md), generated from the dat
 | MAP | The operator can enumerate every PHI store, flow and egress |
 | BASE | The ordinary Security Rule safeguards come first |
 | TEST | Controls are proven by repeatable tests, not policy text |
+| CONSENT | People know when AI is involved, can decline it where they have that right, and are not treated worse by it |
 
 | Level | Name | Meaning | Controls |
 | --- | --- | --- | --- |
 | L0 | Unprivileged | No PHI; the product keeps it out | 5 |
-| L1 | Helper | Stores and processes PHI on BAA-covered models | 35 |
-| L2 | Agentic | Agents act on PHI; external assistants connect | 43 |
+| L1 | Helper | Stores and processes PHI on BAA-covered models | 43 |
+| L2 | Agentic | Agents act on PHI; external assistants connect | 51 |
 
 The design is least privilege as a good system tool practices it: do useful work with no special rights, and earn elevated access through an explicit, verified, revocable step. Here the privilege is access to PHI.
 
@@ -269,7 +270,8 @@ pz report --strict                               # exit 1 unless conformant, for
 
 Rules the tooling enforces:
 
-- Probes refuse to run unless the target file sets `authorized: true`, `synthetic_data_only: true` and an `authorization_ref`. Test systems you own or have written permission to test, with synthetic data, never real PHI.
+- Probes refuse to run unless the target file sets `authorized: true`, `synthetic_data_only: true`, an `authorization_ref`, and `authorized_hosts` that include the `base_url` host. Test systems you own or have written permission to test, with synthetic data, never real PHI. Copy the hosts from the rules of engagement, and say there if you set `user_agent` so the test looks like ordinary traffic.
+- `pz calibration` scores each named forecaster. The scores grade guesses about a system, not anyone's work; do not use them to rate staff, and use a role or alias with `--by` if that is a risk.
 - A probe can fail a control. It cannot pass one. A clean run sets `partial`; a person records `pass` with evidence.
 - A finding is a theory until it reproduces. Network probes ask a second time before reporting, and a one-off goes to the notes, not the findings.
 - Every probe run writes a dated, hashed JSON file under `evidence/`.
@@ -284,8 +286,9 @@ patient-zero collects nothing and phones nowhere. The only network traffic it ev
 
 - **Not a HIPAA certification.** HHS does not issue or recognize one. This produces evidence for a customer or an external assessor.
 - **Not a NIST publication**, and not legal advice. Every HIPAA paragraph cited was checked to exist in eCFR on 2026-11-10; whether it is the right home for a control is the author's judgment. The SP 800-53 and CSF identifiers are unchecked.
-- **Not a pentest.** Nine probes touch 11 of 43 controls. The other 32 need a person, and so does the final call on those 11. [`docs/COVERAGE.md`](docs/COVERAGE.md) is generated from the code and lists every control.
+- **Not a pentest.** Nine probes touch 11 of 51 controls. The other 40 need a person, and so does the final call on those 11. [`docs/COVERAGE.md`](docs/COVERAGE.md) is generated from the code and lists every control.
 - **Not battle-tested.** Draft 0.1, one author, proven only against its own demo app. The agent probe plants one instruction per carrier in four dressings; current models shrug off naive injections, so a clean result says little, and the score reflects that. A model may also behave differently when it can tell it is being tested, which is why the markers look like ordinary words and the user agent is configurable.
+- **Not a consent or ethics review.** The CONSENT family asks whether patients are told about AI, can decline it, are recorded only with agreement, and are not treated worse by it. Its citations (42 CFR Part 2, 45 CFR 92.210, state AI and recording laws) have not been checked by a lawyer, and none of its controls has a probe. An IRB, an ethics committee or counsel still makes those calls.
 - **Not tamper-proof logging.** The hash chain shows edits. It cannot show a cut tail unless you anchor the head hash somewhere the app cannot write.
 
 ## Things that do not work

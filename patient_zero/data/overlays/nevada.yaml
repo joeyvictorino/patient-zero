@@ -11,6 +11,10 @@ laws:
     title: Senate Bill 370 (2023), consumer health data, NRS 603A.500 to 603A.590
     effective: "2024-03-31"
     source: https://dwt.com/gcp/state-privacy-laws-tracker/broad-state-privacy-law-tracker/nevada
+  NRS200:
+    title: NRS 200.620 and 200.650, interception and recording of wire communications and private conversations
+    source: https://www.leg.state.nv.us/NRS/NRS-200.html
+    note: long-standing law, not checked against the current text for this overlay
 items:
   - id: NV-1
     law: AB406
@@ -52,3 +56,11 @@ items:
     plain: Health information about people who are not yet our patients, such as website visitors, is covered by a separate Nevada law unless the vendor is exempt.
     ask: Do you collect health-related information about people before they become our patients, and how do you comply with Nevada's consumer health data law for it?
     proof: Their consumer health data privacy policy, or their written basis for exemption.
+  - id: NV-6
+    law: NRS200
+    cite: "NRS 200.620, 200.650"
+    applies: AI scribes, call summaries and any feature that records or transcribes conversations with people in Nevada
+    statement: A feature that records or transcribes a phone or video call shall obtain the consent of every party before recording, because the Nevada Supreme Court has read NRS 200.620 to require all-party consent for telephone recordings (Lane v. Allstate, 1998). In-person conversations under NRS 200.650 need at least one party's consent; CONSENT-2 in the profile asks for every party's agreement in all cases.
+    plain: Nobody on a phone or video call may be recorded or transcribed by an AI tool unless everyone on the call has agreed first.
+    ask: When your AI records or transcribes a phone or video visit, how does it get every participant's agreement before it starts, and what happens if one person says no?
+    proof: The consent prompt or script for calls, where the agreement is stored, and the behavior when someone declines. Confirm the reading of NRS 200.620 with Nevada counsel.

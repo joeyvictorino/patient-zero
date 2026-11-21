@@ -3,8 +3,8 @@
 Generated from `patient_zero/data/controls.yaml` by `pz controls --markdown`. Do not edit by hand.
 
 - **L0 Unprivileged:** No PHI. The product actively keeps PHI out. (5 controls)
-- **L1 Helper:** Stores and processes PHI. AI features run only on BAA-covered models. No external assistants and no autonomous outbound actions on PHI. (35 controls)
-- **L2 Agentic:** Agents act on PHI and external assistants may connect. (43 controls)
+- **L1 Helper:** Stores and processes PHI. AI features run only on BAA-covered models. No external assistants and no autonomous outbound actions on PHI. (43 controls)
+- **L2 Agentic:** Agents act on PHI and external assistants may connect. (51 controls)
 
 ## GATE: Privilege gating
 
@@ -104,5 +104,20 @@ HIPAA 164.308(a)(8). SP 800-53 CA-2, CA-8, RA-5, SA-11. CSF ID.RA, ID.IM.
 - **TEST-3** (L1) Vulnerability scans shall run at least every six months, with fix deadlines by severity.
 - **TEST-4** (L1) Evidence for each control shall be collected automatically, dated and kept for the assessor.
 - **TEST-5** (L2) An adversarial test suite shall run before each model, prompt or tool change ships.
+
+## CONSENT: Transparency and patient choice
+
+People know when AI is involved, can decline it where they have that right, and are not treated worse by it.
+
+HIPAA 164.514(b), 164.520, 164.522, 164.524, 164.526, 164.528. SP 800-53 PT-2, PT-4, PT-5, PT-7, SA-8. CSF GV.OC, GV.PO, PR.DS.
+
+- **CONSENT-1** (L1) Content an AI generates and sends to a patient without a clinician reviewing it first shall say that AI wrote it and how to reach a person.
+- **CONSENT-2** (L1) Before a visit or call is recorded or transcribed for an AI feature, every party shall be told and shall agree, the agreement shall be recorded, and the visit shall be able to go ahead without recording.
+- **CONSENT-3** (L1) For each AI feature the vendor shall document what it does, what patient data it uses, its known limits and whether a person reviews its output, in language the customer can give to patients.
+- **CONSENT-4** (L1) When a patient declines AI involvement, the customer shall be able to turn AI features off for that patient, and every feature, agent and background job shall honor that choice.
+- **CONSENT-5** (L1) Records covered by 42 CFR Part 2 (substance use disorder treatment) shall be marked when they enter the system and shall not reach an AI feature, a subprocessor or another workspace beyond what the patient's Part 2 consent permits.
+- **CONSENT-6** (L1) AI features that support patient care decisions shall be delivered with the inputs they use, including any race, color, national origin, sex, age or disability variables, and with performance results by patient group, so the customer can meet 45 CFR 92.210.
+- **CONSENT-7** (L1) The product shall support the patient rights the customer owes: access to and amendment of AI-generated content in the record, and an accounting of disclosures that includes disclosures made by agents.
+- **CONSENT-8** (L1) Patient data used to evaluate or improve a model shall first be de-identified under 45 CFR 164.514, with the method and the Safe Harbor review or expert determination kept on file.
 
 HIPAA citations were checked to exist in eCFR on 2026-11-10. SP 800-53 and CSF identifiers are unchecked. The fit of every mapping is the author's judgment, not a legal opinion.

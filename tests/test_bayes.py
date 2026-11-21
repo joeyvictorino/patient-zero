@@ -136,12 +136,12 @@ def test_cli_belief_next_and_html(tmp_path, capsys):
     capsys.readouterr()
     assert main(["belief", a]) == 0
     out = capsys.readouterr().out
-    assert "1 of 35 controls marked pass" in out and "BASE-1" in out
+    assert "1 of 43 controls marked pass" in out and "BASE-1" in out
     assert main(["next", a, "--top", "3"]) == 0
     assert capsys.readouterr().out.count("bits") == 3
     page = str(tmp_path / "report.html")
     assert main(["report", a, "--html", "-o", page]) == 0
     doc = open(page).read()
     assert doc.startswith("<!doctype html>") and "Demo &lt;App&gt;" in doc and "<script" not in doc
-    assert doc.count("class='row'") == 35
-    assert html.render(assess.load(a), PROF, MODEL).count("belief it holds") == 35
+    assert doc.count("class='row'") == 43
+    assert html.render(assess.load(a), PROF, MODEL).count("belief it holds") == 43

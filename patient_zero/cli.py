@@ -280,6 +280,8 @@ def _cmd_calibration(args) -> int:
         print(f"  {r['forecaster']:<28} {r['brier']:.3f}  over {r['settled']} settled")
     if max(r["settled"] for r in rows) < 20:
         print("  Fewer than 20 settled predictions. Differences this size are noise; keep predicting.")
+    print("  These scores are for forecasters to learn from. They grade guesses about a system, not anyone's work;")
+    print("  do not use them to rate staff. Use a role or an alias with --by if that is a risk on your team.")
     return EXIT_OK
 
 
@@ -471,7 +473,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("predict", help="before a probe runs, record how likely you think it is to come back clean")
     p.add_argument("probe", choices=PROBES)
     p.add_argument("probability", type=float, help="0 to 1")
-    p.add_argument("--by", required=True, help="who is predicting")
+    p.add_argument("--by", required=True, help="who is predicting (a name, role or alias; scores are not for rating staff)")
     p.add_argument("-a", "--assessment", default="assessment.yaml")
     p.set_defaults(func=_cmd_predict)
 

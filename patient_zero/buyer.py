@@ -43,7 +43,9 @@ def overlay_markdown(name: str) -> str:
         "",
     ]
     for key, law in data["laws"].items():
-        lines.append(f"- **{key}:** [{law['title']}]({law['source']}), effective {law['effective']}")
+        when = f", effective {law['effective']}" if law.get("effective") else ""
+        note = f" ({law['note']})" if law.get("note") else ""
+        lines.append(f"- **{key}:** [{law['title']}]({law['source']}){when}{note}")
     lines.append("")
     for item in data["items"]:
         lines += [

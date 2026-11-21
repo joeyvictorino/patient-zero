@@ -6,6 +6,7 @@ State requirements that sit on top of HIPAA for AI products used in Nevada. Chec
 
 - **AB406:** [Assembly Bill 406 (2025), artificial intelligence in mental and behavioral health care](https://archive.leg.state.nv.us/Session/83rd2025/Bills/AB/AB406_EN.pdf), effective 2025-07-01
 - **SB370:** [Senate Bill 370 (2023), consumer health data, NRS 603A.500 to 603A.590](https://dwt.com/gcp/state-privacy-laws-tracker/broad-state-privacy-law-tracker/nevada), effective 2024-03-31
+- **NRS200:** [NRS 200.620 and 200.650, interception and recording of wire communications and private conversations](https://www.leg.state.nv.us/NRS/NRS-200.html) (long-standing law, not checked against the current text for this overlay)
 
 ## NV-1: The AI must never present itself as a therapist or counselor, or as a way to get therapy.
 
@@ -56,3 +57,13 @@ State requirements that sit on top of HIPAA for AI products used in Nevada. Chec
 **Ask the vendor:** Do you collect health-related information about people before they become our patients, and how do you comply with Nevada's consumer health data law for it?
 
 **A good answer comes with:** Their consumer health data privacy policy, or their written basis for exemption.
+
+## NV-6: Nobody on a phone or video call may be recorded or transcribed by an AI tool unless everyone on the call has agreed first.
+
+**Requirement (NRS200 NRS 200.620, 200.650).** A feature that records or transcribes a phone or video call shall obtain the consent of every party before recording, because the Nevada Supreme Court has read NRS 200.620 to require all-party consent for telephone recordings (Lane v. Allstate, 1998). In-person conversations under NRS 200.650 need at least one party's consent; CONSENT-2 in the profile asks for every party's agreement in all cases.
+
+**Applies to:** AI scribes, call summaries and any feature that records or transcribes conversations with people in Nevada.
+
+**Ask the vendor:** When your AI records or transcribes a phone or video visit, how does it get every participant's agreement before it starts, and what happens if one person says no?
+
+**A good answer comes with:** The consent prompt or script for calls, where the agreement is stored, and the behavior when someone declines. Confirm the reading of NRS 200.620 with Nevada counsel.
