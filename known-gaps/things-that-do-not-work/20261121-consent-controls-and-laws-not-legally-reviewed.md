@@ -1,17 +1,22 @@
-Severity: HIGH
+Severity: MEDIUM
 Gap-Class: unverified
 
-# The CONSENT family and Nevada item NV-6 cite laws nobody has checked against the source
+# The CONSENT family and Nevada item NV-6 have not been reviewed by a lawyer
 
-The eight CONSENT controls (patient-facing AI notices, recording consent, AI descriptions for patients, per-patient opt-out, 42 CFR Part 2 records, bias reporting under 45 CFR 92.210, patient rights, de-identification) and NV-6 (recording consent under NRS 200.620 and 200.650) were written from the author's knowledge. Unlike the original HIPAA citations, none of these were checked against eCFR or the statute text.
+On 2026-11-21 the author checked the citations against the sources:
 
-Specific doubts:
+- 45 CFR 164.502(a)(4)(ii), 164.514(b), 164.520, 164.522, 164.524, 164.526, 164.528 and 92.210, and 42 CFR 2.11, 2.12, 2.31 and 2.32, against eCFR as current on 2026-11-19.
+- The HIPAA Privacy Rule final rule published 2026-11-19 (FR Doc. 2026-23429, effective 2027-01-19, compliance 2027-07-19). It cuts the time to act on an access request to 15 calendar days and lets a BAA require the business associate to deliver copies directly to the patient. CONSENT-7 now says so.
+- NRS 200.620 and 200.650 against the Nevada Legislature's current text.
+- California AB 3030 (Health and Safety Code 1339.75) through secondary sources only.
 
-- 45 CFR 164.514(b), 164.520, 164.522, 164.524, 164.526 and 164.528 are cited at family level without confirming that each is the right home.
-- 42 CFR Part 2 was substantially amended in 2024. CONSENT-5 does not reflect the details of the amended consent and redisclosure rules.
-- 45 CFR 92.210 applies to covered entities that use patient care decision support tools. CONSENT-6 asks the vendor to supply what the customer needs, which is a reading of the rule, not something it requires of vendors.
-- State laws on AI in patient communications (for example California AB 3030) and on recording consent differ by state. CONSENT-1 and CONSENT-2 are written to the strictest common case, not to any one statute.
-- NV-6 relies on Lane v. Allstate (Nev. 1998) for all-party consent on telephone recordings. That case was not re-read for this overlay.
+That check corrected two things. CONSENT-5 had said Part 2 records may not reach a vendor without patient consent, but 42 CFR 2.12(c)(4) lets a program share them with a qualified service organization without consent. NV-6 now notes that NRS 200.620 does not reach recordings made outside Nevada (Ditech v. Buckles, 2017).
+
+What is still open:
+
+- Lane v. Allstate (Nev. 1998), Sharpe v. State (2015) and Ditech v. Buckles (2017) are cited from secondary sources, not read in full.
+- 45 CFR 92.210 binds covered entities that use decision support tools. CONSENT-6 asks the vendor to supply what the customer needs, which is a reading of the rule, not something it requires of vendors.
+- CONSENT-1 and CONSENT-2 are written to the strictest common case, not to any one state's statute.
 - None of the CONSENT controls has a probe.
 
-What would close this: a health privacy lawyer checks each citation and the NV-6 reading, corrections are merged, and `hipaa_citations_checked` covers the CONSENT family.
+What would close this: a health privacy lawyer reviews each control and NV-6, corrections are merged, and the reviewer is credited.

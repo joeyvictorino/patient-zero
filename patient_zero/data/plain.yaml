@@ -189,17 +189,17 @@ CONSENT-4:
   ask: If a patient asks that AI not be used with their information, how do we turn it off for that one patient, and which features does that cover?
   proof: The per-patient setting, and a test showing that no AI feature or automated task uses that patient's information once it is off.
 CONSENT-5:
-  plain: Addiction treatment records, which federal law protects more strictly, are marked and kept from the AI unless the patient's written consent allows it.
-  ask: How does your product identify substance use disorder treatment records covered by 42 CFR Part 2, and what keeps them from your AI and other companies without the patient's consent?
-  proof: How such records are marked, and a test showing a marked record is refused by the AI features without matching consent on file.
+  plain: Addiction treatment records, which federal law protects more strictly, stay within the work the vendor does for us unless the patient consents.
+  ask: Will you sign the agreement 42 CFR Part 2 requires, and what keeps addiction treatment records from other companies and other uses without the patient's written consent?
+  proof: The signed agreement, how such records are identified, and a test showing they are refused for any use the agreement and consent do not cover.
 CONSENT-6:
   plain: AI that helps with care decisions comes with the facts we need to check it does not treat some patients worse, such as by race, sex, age or disability.
   ask: Which inputs does your AI use to support care decisions, does it use race, sex, age, disability or national origin, and how well does it perform for each patient group?
   proof: The list of inputs and performance results broken down by patient group, for the current version.
 CONSENT-7:
   plain: Patients can see and correct what the AI wrote in their record, and we can list every time the AI shared their information.
-  ask: Can a patient get a copy of, and ask to correct, what your AI wrote in their record, and can you list each time the AI sent their information somewhere?
-  proof: A sample record export that includes AI-written content, and a sample list of disclosures that includes ones the AI made.
+  ask: Can we give a patient a copy of what your AI wrote in their record within days, let them correct it, and list each time the AI sent their information somewhere?
+  proof: A sample record export that includes AI-written content and how long it takes, and a sample list of disclosures that includes ones the AI made.
 CONSENT-8:
   plain: Before patient information is used to test or improve the AI, it has names and other identifying details removed by an accepted method.
   ask: Do you use our patient information to test or improve your AI, and if so, how do you remove identifying details first and who checked it?

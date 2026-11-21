@@ -4,10 +4,11 @@
 # (45 CFR Part 164) under a heading on the stated topic. Whether a paragraph is
 # the right home for a control is the author's judgment, not a legal opinion.
 # SP 800-53 Rev. 5 and CSF 2.0 identifiers have not been checked against source.
-# The CONSENT family was added on 2026-11-21. Its HIPAA paragraphs and the other
-# laws it names (42 CFR Part 2, 45 CFR 92.210, state AI disclosure and recording
-# laws) were cited from the author's knowledge and have NOT been checked against
-# eCFR or the statutes. See known-gaps for what would close that.
+# The CONSENT family was added on 2026-11-21. Its HIPAA paragraphs, 45 CFR 92.210
+# and 42 CFR 2.11, 2.12 and 2.31 were checked that day against eCFR as current on
+# 2026-11-19, including the HIPAA Privacy Rule final rule published 2026-11-19
+# (FR Doc. 2026-23429, effective 2027-01-19, compliance 2027-07-19). As with the
+# rest of the file, whether a paragraph is the right home is the author's judgment.
 version: "0.1"
 status: draft
 hipaa_citations_checked: "2026-11-10"
@@ -77,7 +78,7 @@ families:
   CONSENT:
     name: Transparency and patient choice
     principle: People know when AI is involved, can decline it where they have that right, and are not treated worse by it.
-    hipaa: ["164.514(b)", "164.520", "164.522", "164.524", "164.526", "164.528"]
+    hipaa: ["164.502(a)(4)(ii)", "164.514(b)", "164.520", "164.522", "164.524", "164.526", "164.528"]
     sp800_53: [PT-2, PT-4, PT-5, PT-7, SA-8]
     csf: [GV.OC, GV.PO, PR.DS]
 
@@ -137,7 +138,7 @@ controls:
   - {id: CONSENT-2, family: CONSENT, min_level: L1, keyword: shall, statement: "Before a visit or call is recorded or transcribed for an AI feature, every party shall be told and shall agree, the agreement shall be recorded, and the visit shall be able to go ahead without recording."}
   - {id: CONSENT-3, family: CONSENT, min_level: L1, keyword: shall, statement: "For each AI feature the vendor shall document what it does, what patient data it uses, its known limits and whether a person reviews its output, in language the customer can give to patients."}
   - {id: CONSENT-4, family: CONSENT, min_level: L1, keyword: shall, statement: "When a patient declines AI involvement, the customer shall be able to turn AI features off for that patient, and every feature, agent and background job shall honor that choice."}
-  - {id: CONSENT-5, family: CONSENT, min_level: L1, keyword: shall, statement: "Records covered by 42 CFR Part 2 (substance use disorder treatment) shall be marked when they enter the system and shall not reach an AI feature, a subprocessor or another workspace beyond what the patient's Part 2 consent permits."}
+  - {id: CONSENT-5, family: CONSENT, min_level: L1, keyword: shall, statement: "A vendor serving a 42 CFR Part 2 program (substance use disorder treatment) shall sign a qualified service organization agreement, shall be able to identify those records, and shall not let them reach a subprocessor, another workspace or a use beyond its services to the program unless Part 2 permits it through the patient's written consent or a listed exception."}
   - {id: CONSENT-6, family: CONSENT, min_level: L1, keyword: shall, statement: "AI features that support patient care decisions shall be delivered with the inputs they use, including any race, color, national origin, sex, age or disability variables, and with performance results by patient group, so the customer can meet 45 CFR 92.210."}
-  - {id: CONSENT-7, family: CONSENT, min_level: L1, keyword: shall, statement: "The product shall support the patient rights the customer owes: access to and amendment of AI-generated content in the record, and an accounting of disclosures that includes disclosures made by agents."}
+  - {id: CONSENT-7, family: CONSENT, min_level: L1, keyword: shall, statement: "The product shall support the patient rights the customer owes: access to AI-generated content in the record fast enough for the customer to act within 15 calendar days (45 CFR 164.524(b)(2) from 2027-07-19), delivery of copies directly to the patient or their designee when the BAA requires it, amendment, and an accounting of disclosures that includes disclosures made by agents."}
   - {id: CONSENT-8, family: CONSENT, min_level: L1, keyword: shall, statement: "Patient data used to evaluate or improve a model shall first be de-identified under 45 CFR 164.514, with the method and the Safe Harbor review or expert determination kept on file."}

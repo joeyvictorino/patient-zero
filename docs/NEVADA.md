@@ -6,7 +6,7 @@ State requirements that sit on top of HIPAA for AI products used in Nevada. Chec
 
 - **AB406:** [Assembly Bill 406 (2025), artificial intelligence in mental and behavioral health care](https://archive.leg.state.nv.us/Session/83rd2025/Bills/AB/AB406_EN.pdf), effective 2025-07-01
 - **SB370:** [Senate Bill 370 (2023), consumer health data, NRS 603A.500 to 603A.590](https://dwt.com/gcp/state-privacy-laws-tracker/broad-state-privacy-law-tracker/nevada), effective 2024-03-31
-- **NRS200:** [NRS 200.620 and 200.650, interception and recording of wire communications and private conversations](https://www.leg.state.nv.us/NRS/NRS-200.html) (long-standing law, not checked against the current text for this overlay)
+- **NRS200:** [NRS 200.620 and 200.650, interception and recording of wire communications and private conversations](https://www.leg.state.nv.us/NRS/NRS-200.html) (text checked 2026-11-21; the all-party reading comes from Lane v. Allstate (Nev. 1998), which was not re-read)
 
 ## NV-1: The AI must never present itself as a therapist or counselor, or as a way to get therapy.
 
@@ -60,7 +60,7 @@ State requirements that sit on top of HIPAA for AI products used in Nevada. Chec
 
 ## NV-6: Nobody on a phone or video call may be recorded or transcribed by an AI tool unless everyone on the call has agreed first.
 
-**Requirement (NRS200 NRS 200.620, 200.650).** A feature that records or transcribes a phone or video call shall obtain the consent of every party before recording, because the Nevada Supreme Court has read NRS 200.620 to require all-party consent for telephone recordings (Lane v. Allstate, 1998). In-person conversations under NRS 200.650 need at least one party's consent; CONSENT-2 in the profile asks for every party's agreement in all cases.
+**Requirement (NRS200 NRS 200.620, 200.650).** A feature that records or transcribes a phone or video call shall obtain the consent of every party before recording. NRS 200.620 bars intercepting a wire communication without one party's consent plus a court order or emergency, and the Nevada Supreme Court has read it to bar taping a call with only one party's consent (Lane v. Allstate, 1998; extended to cell phones in Sharpe v. State, 2015). It does not reach a recording made entirely outside Nevada (Ditech v. Buckles, 2017). In-person conversations under NRS 200.650 need one party's authorization; CONSENT-2 in the profile asks for every party's agreement in all cases.
 
 **Applies to:** AI scribes, call summaries and any feature that records or transcribes conversations with people in Nevada.
 

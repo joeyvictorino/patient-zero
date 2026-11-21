@@ -109,15 +109,15 @@ HIPAA 164.308(a)(8). SP 800-53 CA-2, CA-8, RA-5, SA-11. CSF ID.RA, ID.IM.
 
 People know when AI is involved, can decline it where they have that right, and are not treated worse by it.
 
-HIPAA 164.514(b), 164.520, 164.522, 164.524, 164.526, 164.528. SP 800-53 PT-2, PT-4, PT-5, PT-7, SA-8. CSF GV.OC, GV.PO, PR.DS.
+HIPAA 164.502(a)(4)(ii), 164.514(b), 164.520, 164.522, 164.524, 164.526, 164.528. SP 800-53 PT-2, PT-4, PT-5, PT-7, SA-8. CSF GV.OC, GV.PO, PR.DS.
 
 - **CONSENT-1** (L1) Content an AI generates and sends to a patient without a clinician reviewing it first shall say that AI wrote it and how to reach a person.
 - **CONSENT-2** (L1) Before a visit or call is recorded or transcribed for an AI feature, every party shall be told and shall agree, the agreement shall be recorded, and the visit shall be able to go ahead without recording.
 - **CONSENT-3** (L1) For each AI feature the vendor shall document what it does, what patient data it uses, its known limits and whether a person reviews its output, in language the customer can give to patients.
 - **CONSENT-4** (L1) When a patient declines AI involvement, the customer shall be able to turn AI features off for that patient, and every feature, agent and background job shall honor that choice.
-- **CONSENT-5** (L1) Records covered by 42 CFR Part 2 (substance use disorder treatment) shall be marked when they enter the system and shall not reach an AI feature, a subprocessor or another workspace beyond what the patient's Part 2 consent permits.
+- **CONSENT-5** (L1) A vendor serving a 42 CFR Part 2 program (substance use disorder treatment) shall sign a qualified service organization agreement, shall be able to identify those records, and shall not let them reach a subprocessor, another workspace or a use beyond its services to the program unless Part 2 permits it through the patient's written consent or a listed exception.
 - **CONSENT-6** (L1) AI features that support patient care decisions shall be delivered with the inputs they use, including any race, color, national origin, sex, age or disability variables, and with performance results by patient group, so the customer can meet 45 CFR 92.210.
-- **CONSENT-7** (L1) The product shall support the patient rights the customer owes: access to and amendment of AI-generated content in the record, and an accounting of disclosures that includes disclosures made by agents.
+- **CONSENT-7** (L1) The product shall support the patient rights the customer owes: access to AI-generated content in the record fast enough for the customer to act within 15 calendar days (45 CFR 164.524(b)(2) from 2027-07-19), delivery of copies directly to the patient or their designee when the BAA requires it, amendment, and an accounting of disclosures that includes disclosures made by agents.
 - **CONSENT-8** (L1) Patient data used to evaluate or improve a model shall first be de-identified under 45 CFR 164.514, with the method and the Safe Harbor review or expert determination kept on file.
 
 HIPAA citations were checked to exist in eCFR on 2026-11-10. SP 800-53 and CSF identifiers are unchecked. The fit of every mapping is the author's judgment, not a legal opinion.
