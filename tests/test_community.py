@@ -231,3 +231,22 @@ def test_lab_answer_key_matches_what_the_check_really_says():
     assert not any("api.py" in place and "notes" in place for g in groups for place in g["places"] if g["issue"].rule == "isolation")
     lab = open(os.path.join(ROOT, "docs", "workshop", "LAB.md")).read()
     assert "pz check examples/vibe-clinic" in lab and "pz demo --brief" in lab
+
+
+# --- the talk -----------------------------------------------------------------
+
+def test_slides_work_offline_and_say_only_what_is_true_of_the_project():
+    import re
+
+    folder = os.path.join(ROOT, "docs", "talk")
+    slides = open(os.path.join(folder, "slides.html")).read()
+    assert slides.count("<section") == 12 and "default-src 'none'" in slides and not re.search(r"""(?:src|href)=["']https?:|url\(""", slides)
+    for image in re.findall(r'<img src="([^"]+)"', slides):
+        assert os.path.isfile(os.path.normpath(os.path.join(folder, image))), image
+    assert all(alt.strip() for alt in re.findall(r'<img [^>]*alt="([^"]*)"', slides)) and slides.count("<img") == 3
+    assert f"{0.9 ** 35 * 100:.1f}%" in slides                                   # the 2.5% on slide 3 is arithmetic, not a slogan
+    assert "0 of 51" in open(os.path.join(folder, "TALK.md")).read() and len(PROF.controls) == 51
+    groups = check.grouped(check.run(os.path.join(ROOT, "examples", "vibe-clinic")))
+    assert len(groups) == 12 and "Twelve kinds of mistake" in slides
+    track = open(os.path.join(folder, "TALK.md")).read()
+    assert track.count("\n| ") - 2 == 12, "one row of the track per slide"

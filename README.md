@@ -256,6 +256,7 @@ pz overlay nevada --review                    # a form for a lawyer in that stat
 - **Sandbox entry and exit that can be checked.** Eleven criteria in [`sandbox.yaml`](patient_zero/data/sandbox.yaml), each reported as met, not met or not checked, with the reason. The operator decides who is admitted.
 - **One view across many vendors.** `pz vendors` verifies every bundle in a folder. A clinic sees which of its vendors' reports are current, co-signed and failing nothing. A coalition, with `--anonymize`, sees which safeguards fail most often across its members without ranking them.
 - **Briefs for people who do not build software.** [Ten questions for legislators](docs/LEGISLATOR-BRIEF.md) and [a pitch scorecard](docs/PITCH-SCORECARD.md), generated from the profile. Neither takes a position on a bill, a vendor or a product.
+- **A ten-minute talk.** [`docs/talk/slides.html`](docs/talk/slides.html) works offline, and [`docs/talk/TALK.md`](docs/talk/TALK.md) has the track, three live demos with fallbacks, and the questions a room asks.
 - **A 45-minute lab** for students and new developers: [`docs/workshop/LAB.md`](docs/workshop/LAB.md), with instructor notes and versions for buyers and policy audiences.
 
 ## Signed evidence, disclosed one file at a time

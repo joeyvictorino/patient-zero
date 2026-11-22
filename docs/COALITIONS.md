@@ -20,6 +20,8 @@ It verifies each one and reports, across all of them, which safeguards fail most
 
 **Brief people who do not build software.** [`LEGISLATOR-BRIEF.md`](LEGISLATOR-BRIEF.md) is ten questions with checkable answers and, where a state overlay exists, what that state's rules say today. [`PITCH-SCORECARD.md`](PITCH-SCORECARD.md) is eight questions for judging a health AI pitch. Both are generated from the profile and take no position on any bill, vendor or product.
 
+**Present it.** [`talk/slides.html`](talk/slides.html) is a twelve-slide deck that works offline, and [`talk/TALK.md`](talk/TALK.md) is a ten-minute track with three live demos and the questions a room asks.
+
 **Teach.** [`workshop/LAB.md`](workshop/LAB.md) is a 45-minute lab for students and new developers, with instructor notes and variations for buyers and for policy audiences.
 
 **Get the law checked locally.** `pz overlay nevada --review` produces [a form](NEVADA-REVIEW.md) a lawyer in the state can mark up in half an hour. A coalition is the natural place to find that lawyer, and to write the overlay for the next state.

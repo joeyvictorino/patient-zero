@@ -5,6 +5,7 @@ Changes to the standard (profile, spec, vectors) are marked **standard**.
 ## Unreleased
 
 ### Added
+- `docs/talk/`: a twelve-slide offline deck and a ten-minute talk track with live demos and fallbacks.
 - `docs/FIELD-NOTES.md`: `pz check` run on 13 public packages; eleven kinds of false alarm found and fixed, each now a regression test. One finding per rule per file, comment lines skipped, PostHog reclassified as analytics.
 - `pz pilot init` and `pz pilot run`: a pilot folder with rules of engagement to sign, synthetic patients, a target file that starts unauthorized and a run sheet; then every configured probe and a plain-language report.
 - `pz synth`: seeded, obviously fake patient records with a test marker per clinic.

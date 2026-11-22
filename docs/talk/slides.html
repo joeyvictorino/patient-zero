@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self'">
+<title>patient-zero: talk slides</title>
+<style>
+  :root { --bg:#f7f6f2; --ink:#1d2228; --soft:#5b646e; --line:#dcd9d0; --accent:#2d4f7c; --warn:#9a3b2f; --card:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#15181c; --ink:#ecebe6; --soft:#a2a9b1; --line:#343a42; --accent:#9dbdea; --warn:#f0998c; --card:#1e2227; } }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  section { display:none; height:100vh; padding: 6vh 5vw 9vh; flex-direction:column; justify-content:center; }
+  section.on { display:flex; }
+  h1 { font-size: clamp(2rem, 5.4vw, 4.6rem); line-height:1.08; margin:0 0 3vh; letter-spacing:-0.02em; max-width: 22ch; }
+  h2 { font-size: clamp(1.6rem, 3.6vw, 3rem); line-height:1.12; margin:0 0 3.5vh; letter-spacing:-0.01em; }
+  p, li { font-size: clamp(1.1rem, 2.1vw, 1.9rem); line-height:1.4; margin:0 0 1.6vh; max-width: 34ch; }
+  .wide p, .wide li { max-width: 46ch; }
+  ul { padding-left: 1.1em; margin:0; }
+  .soft { color: var(--soft); }
+  .big { font-size: clamp(3rem, 11vw, 9rem); font-weight:700; line-height:1; color: var(--warn); margin: 0 0 2vh; }
+  .row { display:flex; gap:4vw; align-items:center; }
+  .row > div { flex:1; min-width:0; }
+  .row > div:last-child { flex:2.1; }
+  .row h2 { font-size: clamp(1.4rem, 2.8vw, 2.4rem); }
+  .row p { font-size: clamp(1rem, 1.6vw, 1.45rem); }
+  .row pre { font-size: clamp(.9rem, 1.5vw, 1.3rem); }
+  img { max-width:100%; max-height:80vh; border:1px solid var(--line); border-radius:10px; display:block; }
+  code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; }
+  pre { font-size: clamp(1rem, 2vw, 1.7rem); background:var(--card); border:1px solid var(--line); border-radius:10px; padding: 2vh 2vw; margin:0 0 2vh; overflow:hidden; }
+  .badge { display:inline-block; font: 600 clamp(1rem, 2vw, 1.6rem) Verdana, sans-serif; color:#fff; border-radius:6px; overflow:hidden; margin: 1vh 0 3vh; }
+  .badge span { display:inline-block; padding: .35em .7em; }
+  .badge .l { background:#2f3640; } .badge .r { background:#4b5b6b; }
+  table { border-collapse:collapse; font-size: clamp(1rem, 1.9vw, 1.7rem); }
+  td { padding: 1vh 2vw 1vh 0; vertical-align:top; border-bottom:1px solid var(--line); }
+  td:first-child { font-weight:650; white-space:nowrap; }
+  footer { position:fixed; bottom:2.5vh; left:7vw; right:7vw; display:flex; justify-content:space-between; color:var(--soft); font-size: clamp(.8rem, 1.2vw, 1rem); }
+  @media print {
+    section { display:flex !important; height:100vh; page-break-after:always; }
+    footer { display:none; }
+    @page { size: 13.333in 7.5in; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<section class="on">
+  <h1>"Is it HIPAA compliant?"</h1>
+  <p class="soft">Why nobody can answer that honestly, and what to ask instead.</p>
+  <p class="soft">patient-zero, an open source project</p>
+</section>
+
+<section>
+  <h2>A clinic asks an AI vendor one question</h2>
+  <p>"Is it HIPAA compliant?"</p>
+  <p>The vendor says yes. There is a badge on the website.</p>
+  <p class="soft">No HIPAA certification exists. The government does not issue or recognize one. The badge is the vendor's own word.</p>
+</section>
+
+<section>
+  <h2>A checklist with 35 green ticks reads as done</h2>
+  <p class="big">2.5%</p>
+  <p>If each tick is 90% likely to be true, that is the chance that nothing is broken.</p>
+  <p class="soft">0.9 multiplied by itself 35 times.</p>
+</section>
+
+<section class="wide">
+  <h2>So ask who tested what, on which version, and when</h2>
+  <table>
+    <tr><td>Building it</td><td>One command reads your project and lists what to fix first, in plain words.</td></tr>
+    <tr><td>Selling it</td><td>Sign what you tested. Send the buyer one file.</td></tr>
+    <tr><td>Buying it</td><td>Check that file in a browser. Nothing to install.</td></tr>
+    <tr><td>Convening them</td><td>Pilots, sandbox criteria, questions for legislators.</td></tr>
+  </table>
+  <p class="soft" style="margin-top:3vh">Free, open source, works offline, and never says "compliant".</p>
+</section>
+
+<section>
+  <div class="row">
+    <div>
+      <h2>What a first draft looks like</h2>
+      <p>A sample app with the usual mistakes.</p>
+      <pre>pz check .</pre>
+      <p class="soft">Twelve kinds of mistake. The first three hand a key or patient data to anyone.</p>
+    </div>
+    <div><img src="../check.png" alt="Terminal output of pz check listing a model called from the browser, a key exposed to visitors, and a committed file of secrets"></div>
+  </div>
+</section>
+
+<section>
+  <div class="row">
+    <div>
+      <h2>A clean test is not a pass</h2>
+      <p>It tests a broken clinic app, patches it, tests again.</p>
+      <p>Every test comes back clean. It still says <strong>not approved</strong>.</p>
+      <p class="soft">Three requests that found nothing are weak evidence. A person has to look and sign.</p>
+    </div>
+    <div><img src="../demo.png" alt="Terminal output of the demo: five safeguards fail, then test clean after the fix, and zero of fifty-one are confirmed"></div>
+  </div>
+</section>
+
+<section>
+  <div class="row">
+    <div>
+      <h2>What the buyer sees</h2>
+      <p>Drop in the file the vendor sent.</p>
+      <p>Unchanged since signing? How old? Who signed? How many safeguards did a person confirm?</p>
+      <p class="soft">If one file was edited afterward, it says so.</p>
+    </div>
+    <div><img src="../verify.png" alt="The verify page showing a sealed report is unchanged, with counts of safeguards confirmed, tested and failing, and who signed"></div>
+  </div>
+</section>
+
+<section>
+  <h2>A badge that cannot lie</h2>
+  <div class="badge"><span class="l">patient-zero</span><span class="r">L1 · 2/43 confirmed · sealed 2026-11-22</span></div>
+  <p>It states counts and a date, and it has to link to the evidence.</p>
+  <p class="soft">It is never green. Tests fail if it says "compliant", "certified" or "passed".</p>
+</section>
+
+<section class="wide">
+  <h2>Four questions anyone can ask a vendor</h2>
+  <ul>
+    <li>Which other companies receive the patient's information?</li>
+    <li>Can the AI model company keep it, or train on it?</li>
+    <li>After something goes wrong, can anyone find out what the AI did?</li>
+    <li>Who checked all this, and can their work be verified?</li>
+  </ul>
+  <p class="soft" style="margin-top:3vh">Ten in all, each with an answer that can be checked.</p>
+</section>
+
+<section class="wide">
+  <h2>What is weak</h2>
+  <ul>
+    <li>The code check is a list of text patterns. On 13 real packages its first run was mostly false alarms. Those are fixed; what it misses is unmeasured.</li>
+    <li>The numbers behind the score are stated guesses.</li>
+    <li>No lawyer or clinician has reviewed the safeguards.</li>
+    <li>One maintainer. Never run on a real product in a real clinic.</li>
+  </ul>
+  <p class="soft" style="margin-top:3vh">Every limit is a file in the repository.</p>
+</section>
+
+<section class="wide">
+  <h2>What would change that</h2>
+  <ul>
+    <li><strong>One pilot.</strong> A vendor, a clinic, test data, one hour.</li>
+    <li><strong>One reviewer per topic.</strong> A health privacy lawyer. A clinician. An assessor.</li>
+    <li><strong>Your hardest question.</strong> What would you want a vendor to prove?</li>
+  </ul>
+</section>
+
+<section>
+  <h1>Ask who tested what.</h1>
+  <p>github.com/joeyvictorino/patient-zero</p>
+  <pre>pip install git+https://github.com/joeyvictorino/patient-zero
+pz check .</pre>
+</section>
+
+<footer><span>patient-zero</span><span id="n"></span></footer>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll("section"));
+  var at = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+  function show(i) {
+    at = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.className = s.className.replace(/\s?on\b/, "") + (k === at ? " on" : ""); });
+    document.getElementById("n").textContent = (at + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#" + (at + 1));
+  }
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight", "PageDown", " ", "Enter"].indexOf(e.key) >= 0) { e.preventDefault(); show(at + 1); }
+    if (["ArrowLeft", "PageUp", "Backspace"].indexOf(e.key) >= 0) { e.preventDefault(); show(at - 1); }
+    if (e.key === "Home") show(0);
+    if (e.key === "End") show(slides.length - 1);
+  });
+  document.addEventListener("click", function (e) { show(at + (e.clientX < window.innerWidth / 3 ? -1 : 1)); });
+  show(at);
+})();
+</script>
+</body>
+</html>
