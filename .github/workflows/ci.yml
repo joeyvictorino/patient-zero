@@ -30,3 +30,35 @@ jobs:
           cd /tmp && /tmp/clean/bin/pz conformance && /tmp/clean/bin/pz demo --brief
       - run: node tools/run_vectors.js
       - run: pz check . --fail-on high --exclude "examples/vibe-clinic/*"
+
+  integrations:
+    # The hooks people will actually install, run in their real hosts.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The GitHub Action, on code with nothing to find
+        uses: ./
+        with:
+          path: patient_zero
+          fail-on: high
+      - name: The GitHub Action, on the sample app that is wrong on purpose
+        id: sample
+        continue-on-error: true
+        uses: ./
+        with:
+          path: examples/vibe-clinic
+      - name: The Action must have failed that job step
+        run: test "${{ steps.sample.outcome }}" = "failure"
+      - name: The MCP server, with the official MCP client library
+        run: |
+          pip install mcp
+          python tools/mcp_client_check.py "$(command -v pz)" examples/vibe-clinic
+      - name: The pre-commit hook, through pre-commit
+        run: |
+          pip install pre-commit
+          mkdir /tmp/clean-repo && cd /tmp/clean-repo && git init -q
+          echo 'print("ok")' > app.py && git add .
+          pre-commit try-repo "$GITHUB_WORKSPACE" patient-zero-check --all-files
+          echo 'new OpenAI({ dangerouslyAllowBrowser: true })' > app.ts && git add .
+          if pre-commit try-repo "$GITHUB_WORKSPACE" patient-zero-check --all-files; then echo "hook should have failed"; exit 1; fi
+
