@@ -11,7 +11,7 @@ In order. The first two are blocking: without them the install command in the po
 - [ ] **Turn on GitHub Pages**: repository Settings, Pages, deploy from branch `main`, folder `/docs`. That serves the landing page and the verifier at `https://joeyvictorino.github.io/patient-zero/`. Open `/verify/` and click "Try a sample".
 - [ ] **Try the install on a machine that has never seen the project**: the three commands at the top of the README, then `pz check` on a real project of yours.
 - [ ] Optional: publish to PyPI so the command is `pip install patient-zero`. The name was unclaimed on 2026-11-22. `.github/workflows/release.yml` publishes on a `v*` tag once you add the repository as a trusted publisher on pypi.org. If you do, update the install lines in the README, `docs/index.html` and below.
-- [ ] Optional: run the GitHub Action and the MCP server once in their real hosts. Both are untested there, and someone will try them.
+- [ ] Optional: connect `pz mcp` in the agent host you use (Claude Code, Cursor) once. CI already runs the GitHub Action, the pre-commit hook and the MCP server against the official client library, but no person has yet used the server from inside an agent.
 - [ ] Read [`docs/FAQ.md`](../FAQ.md). Those are the objections to expect. If you disagree with an answer, change it before posting, not in the thread.
 
 ## Title

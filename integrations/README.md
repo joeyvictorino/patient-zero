@@ -1,6 +1,6 @@
 # Integrations
 
-patient-zero is most useful when it runs without anyone remembering to run it. Each of these runs `pz check`, the zero-setup scan.
+patient-zero is most useful when it runs without anyone remembering to run it. Each of these runs `pz check`, the zero-setup scan. This repository's own CI runs the GitHub Action, the pre-commit hook and the MCP server (against the official MCP client library) on every push.
 
 ## A coding agent (Claude Code, Cursor, any MCP client)
 

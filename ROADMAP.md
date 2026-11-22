@@ -31,7 +31,7 @@ Not done, and not possible from inside the repository:
 
 | What | Why | Size |
 | --- | --- | --- |
-| Run the integrations in their real hosts and fix what breaks | They are untested there | small |
+| Connect the MCP server in real agent hosts, evaluate the skill, run SARIF upload once | CI covers the Action, pre-commit and the MCP client library, not these | small |
 | A corpus of sample apps with known flaws, and measured hit and miss rates for `pz check` | Its accuracy is unknown | medium |
 | Probes for the 40 controls that have none, CONSENT first | Most of the profile rests on a person's word | large, one at a time |
 | A deeper agent probe: multi-turn, tool-result and long-document injection | The current one is shallow | medium |
