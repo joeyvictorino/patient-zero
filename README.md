@@ -27,11 +27,90 @@ Three ways in, depending on who you are:
 | A clinic or health system deciding on a vendor | [Verify what they sent you](#if-you-buy-ai-tools-rather-than-build-them), in a browser |
 | A coalition, association or sandbox that convenes them | [Pilots, sandbox criteria, cohort view, briefs](#for-coalitions-sandboxes-and-classrooms) |
 
-The demo's short version, in plain language (`pz demo --brief`):
+**How well does it work?** Honestly: it is new. On its first run against 13 real open source packages, most of what `pz check` reported was a false alarm; those are fixed and [written up](docs/FIELD-NOTES.md), and what it misses is still unmeasured. The integrations run in CI. No lawyer or clinician has reviewed the safeguards, and it has not yet been used on a real product in a real clinic. [Every known limit is a file in the repository.](known-gaps/things-that-do-not-work/)
+
+**It is not** a HIPAA certification (none exists), a pentest or a code review. A clean result is weak evidence, and the tool says so every time.
+
+<details>
+<summary>Contents</summary>
+
+- [If you buy AI tools rather than build them](#if-you-buy-ai-tools-rather-than-build-them)
+- [Why this exists](#why-this-exists)
+- [The idea: compliance is inference, not a checklist](#the-idea-compliance-is-inference-not-a-checklist)
+- [The demo](#the-demo)
+- [Method: four rules that keep the numbers honest](#method-four-rules-that-keep-the-numbers-honest)
+- [Embedded mode: the probes inside your own tests](#embedded-mode-the-probes-inside-your-own-tests)
+- [Check your own project in ten seconds](#check-your-own-project-in-ten-seconds)
+- [Show a customer what you tested](#show-a-customer-what-you-tested)
+- [For coalitions, sandboxes and classrooms](#for-coalitions-sandboxes-and-classrooms)
+- [Signed evidence, disclosed one file at a time](#signed-evidence-disclosed-one-file-at-a-time)
+- [A standard, not just a tool](#a-standard-not-just-a-tool)
+- [The profile](#the-profile), [reference safeguards](#reference-safeguards), [assess your own product](#assess-your-own-product)
+- [No telemetry](#no-telemetry), [what this is not](#what-this-is-not), [things that do not work](#things-that-do-not-work)
+- [Questions people ask](docs/FAQ.md)
+
+</details>
+
+## If you buy AI tools rather than build them
+
+You run a practice, a clinic or a health system, and a vendor wants your patient data. You do not need to read the rest of this page.
+
+- [One page for healthcare leaders](docs/FOR-HEALTHCARE-LEADERS.md) ([en español](docs/PARA-LIDERES-DE-SALUD.md))
+- [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 51 safeguards in plain language, each with the question to ask and what a good answer comes with
+- [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, SB 370 on consumer health data, and consent before recording a call
+
+A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and one signed file of evidence. To check that file, open [`docs/verify/index.html`](docs/verify/index.html) in a browser and drop it in. Nothing is installed and nothing is uploaded. The page tells you whether the evidence is unchanged since it was signed, how old it is, who signed it, and how many safeguards a person has confirmed, in plain numbers. It never says "compliant", because no tool can.
+
+![The verify page](docs/verify.png)
+
+## Why this exists
+
+Getting an AI product into a clinic costs months and a consultant before anyone has tested anything. Small teams with useful tools give up, and healthcare keeps its fax machines. Most of that cost is working out what to check and how to show you checked it. That part can be open source.
+
+## The idea: compliance is inference, not a checklist
+
+A checklist with 35 green ticks reads as 100% done. If each tick is really 90% likely to be true, the chance that nothing is broken is 0.9^35, about 2.5%.
+
+patient-zero keeps one number per control, P(control holds | evidence), and updates it with Bayes' rule:
+
+- A probe **finding** is strong evidence the control is broken.
+- A **clean** probe run is weak evidence it holds, scaled by how many checks ran and how much of the control that probe can see at all.
+- A person's **attestation** counts for more when they are independent of the team that built the control.
+- Evidence **decays**. Its weight halves every 180 days, so last year's pentest stops carrying this year's release.
+- Rerunning a probe **replaces** its old result, so the same test is never counted twice.
+
+Because belief is a number, the tool can also tell you what to do next. `pz next` ranks every test you could run by expected bits of uncertainty removed per unit of effort:
+
+```
+$ pz next
+most uncertainty removed per unit of effort:
+  TRUST-2  run the egress probe                   0.43 bits  cost 1
+  LOG-2    run the log probe                      0.34 bits  cost 1
+  TRUST-1  run the egress probe                   0.25 bits  cost 1
+  GATE-3   run the isolation probe                0.24 bits  cost 1
+```
+
+Controls are scored as independent, but evidence often is not. One person signing twenty controls is one point of failure, not twenty. `pz fragile` leaves each source out in turn and shows what falls:
+
+```
+$ pz fragile
+if everything one source told you were wrong:
+  pat (self)                         props up  6 control(s), 1.5 more expected broken
+  lee (independent)                  props up  1 control(s), 0.4 more expected broken
+```
+
+**The numbers are assumptions, not measurements.** Every likelihood sits in one short file, [`patient_zero/data/belief.yaml`](patient_zero/data/belief.yaml). Nobody has calibration data for "how often does a self-attested access control turn out to be broken", so the file states its guesses and you can replace them with `--model`. The headline product also treats controls as independent, which they are not. If you have real calibration data, that is the most valuable contribution this project could get.
+
+## The demo
+
+`pz demo` starts a deliberately broken clinic app on your own machine, investigates it, patches it, and investigates again. The short version, in plain language (`pz demo --brief`):
 
 ![pz demo --brief](docs/demo.gif)
 
-The full run:
+Look at the belief block. Every probe came back clean and belief barely moved. Three requests that found nothing are not proof of tenant isolation, and the score says so.
+
+<details>
+<summary>The full run of <code>pz demo</code></summary>
 
 ```
 == before any test: write the prediction down ==
@@ -90,57 +169,7 @@ The full run:
   edit one evidence file to say clean instead of finding, verify again: changed since sealing: evidence/agent-...json
 ```
 
-Look at the belief block. Every probe came back clean and belief barely moved. Three requests that found nothing are not proof of tenant isolation, and the score says so.
-
-## If you buy AI tools rather than build them
-
-You run a practice, a clinic or a health system, and a vendor wants your patient data. You do not need to read the rest of this page.
-
-- [One page for healthcare leaders](docs/FOR-HEALTHCARE-LEADERS.md) ([en español](docs/PARA-LIDERES-DE-SALUD.md))
-- [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 51 safeguards in plain language, each with the question to ask and what a good answer comes with
-- [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, SB 370 on consumer health data, and consent before recording a call
-
-A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and one signed file of evidence. To check that file, open [`docs/verify/index.html`](docs/verify/index.html) in a browser and drop it in. Nothing is installed and nothing is uploaded. The page tells you whether the evidence is unchanged since it was signed, how old it is, who signed it, and how many safeguards a person has confirmed, in plain numbers. It never says "compliant", because no tool can.
-
-![The verify page](docs/verify.png)
-
-## Why this exists
-
-Getting an AI product into a clinic costs months and a consultant before anyone has tested anything. Small teams with useful tools give up, and healthcare keeps its fax machines. Most of that cost is working out what to check and how to show you checked it. That part can be open source.
-
-## The idea: compliance is inference, not a checklist
-
-A checklist with 35 green ticks reads as 100% done. If each tick is really 90% likely to be true, the chance that nothing is broken is 0.9^35, about 2.5%.
-
-patient-zero keeps one number per control, P(control holds | evidence), and updates it with Bayes' rule:
-
-- A probe **finding** is strong evidence the control is broken.
-- A **clean** probe run is weak evidence it holds, scaled by how many checks ran and how much of the control that probe can see at all.
-- A person's **attestation** counts for more when they are independent of the team that built the control.
-- Evidence **decays**. Its weight halves every 180 days, so last year's pentest stops carrying this year's release.
-- Rerunning a probe **replaces** its old result, so the same test is never counted twice.
-
-Because belief is a number, the tool can also tell you what to do next. `pz next` ranks every test you could run by expected bits of uncertainty removed per unit of effort:
-
-```
-$ pz next
-most uncertainty removed per unit of effort:
-  TRUST-2  run the egress probe                   0.43 bits  cost 1
-  LOG-2    run the log probe                      0.34 bits  cost 1
-  TRUST-1  run the egress probe                   0.25 bits  cost 1
-  GATE-3   run the isolation probe                0.24 bits  cost 1
-```
-
-Controls are scored as independent, but evidence often is not. One person signing twenty controls is one point of failure, not twenty. `pz fragile` leaves each source out in turn and shows what falls:
-
-```
-$ pz fragile
-if everything one source told you were wrong:
-  pat (self)                         props up  6 control(s), 1.5 more expected broken
-  lee (independent)                  props up  1 control(s), 0.4 more expected broken
-```
-
-**The numbers are assumptions, not measurements.** Every likelihood sits in one short file, [`patient_zero/data/belief.yaml`](patient_zero/data/belief.yaml). Nobody has calibration data for "how often does a self-attested access control turn out to be broken", so the file states its guesses and you can replace them with `--model`. The headline product also treats controls as independent, which they are not. If you have real calibration data, that is the most valuable contribution this project could get.
+</details>
 
 ## Method: four rules that keep the numbers honest
 
