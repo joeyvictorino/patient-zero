@@ -12,6 +12,9 @@ The most useful contributions are listed in `known-gaps/things-that-do-not-work/
 | Make the demo app wrong in a new way | `patient_zero/demo/leaky_clinic.py` |
 | Add reference code for a control | a module under `patient_zero/`, registered in `patient_zero/coverage.py` |
 | Record a limit you found | a new file in `known-gaps/things-that-do-not-work/` |
+| Add a `pz check` rule | `patient_zero/data/check_rules.yaml`, with a test in `tests/test_check.py` that shows it firing |
+| Change the spec or a test vector | `spec/SPEC.md` and `tools/make_vectors.py`; this is a change to the standard, see `GOVERNANCE.md` |
+| Contribute calibration data | a file from `pz calibration --export` in `calibration-data/` |
 
 ## Rules for a probe
 
@@ -29,6 +32,8 @@ ruff check .
 pytest -q
 pz coverage --markdown > docs/COVERAGE.md
 pz controls --markdown > docs/PROFILE.md
+pz conformance
+node tools/run_vectors.js
 ```
 
 A test fails if the generated documents are out of date.
@@ -43,3 +48,7 @@ Gap-Class: missing | wrong | weak | unverified
 ```
 
 When a gap is fixed, move its file to `known-gaps/things-that-now-work/` and say what changed.
+
+## Words the project does not use
+
+Nothing the tooling prints, signs or draws may call a product compliant, certified, approved or passed. Say what was tested, by whom, on which build. Tests enforce this for the badge, the check rules and the agent instructions.

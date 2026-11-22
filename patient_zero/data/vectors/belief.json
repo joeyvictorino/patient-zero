@@ -1,0 +1,1138 @@
+{
+ "cases": [
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "no evidence is the prior",
+   "p_holds": 0.5,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 2,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "finding",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a finding today",
+   "p_holds": 0.02173913043478261,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 3,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a clean run of 3 checks today",
+   "p_holds": 0.5604884256280472,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 0,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a clean run with no checks moves nothing",
+   "p_holds": 0.49494974492411364,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "BASE-1",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 10,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a clean run on a control the probe cannot see",
+   "p_holds": 0.49494974492411364,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 3,
+      "date": "2026-05-26",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a clean run 180 days old counts half",
+   "p_holds": 0.5303556890943073,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": null,
+      "checks": 2,
+      "date": "2026-11-01",
+      "kind": "probe",
+      "outcome": "finding",
+      "probe": "isolation"
+     },
+     {
+      "build": null,
+      "checks": 3,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "a rerun replaces the earlier result",
+   "p_holds": 0.5604884256280472,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "BASE-1",
+   "entry": {
+    "observations": [
+     {
+      "by": "self",
+      "date": "2026-11-22",
+      "kind": "attestation",
+      "outcome": "pass",
+      "ref": "a"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "self attestation",
+   "p_holds": 0.75,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "BASE-1",
+   "entry": {
+    "observations": [
+     {
+      "by": "independent",
+      "date": "2026-11-22",
+      "kind": "attestation",
+      "outcome": "pass",
+      "ref": "a"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "independent attestation",
+   "p_holds": 0.9183673469387756,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "BASE-1",
+   "entry": {
+    "observations": [
+     {
+      "by": "self",
+      "date": "2026-11-22",
+      "kind": "attestation",
+      "outcome": "pass",
+      "ref": "a"
+     },
+     {
+      "by": "independent",
+      "date": "2026-11-22",
+      "kind": "attestation",
+      "outcome": "pass",
+      "ref": "a"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "self and independent attestations add",
+   "p_holds": 0.9712230215827338,
+   "today": "2026-11-22"
+  },
+  {
+   "control": "BASE-1",
+   "entry": {
+    "observations": [
+     {
+      "by": "independent",
+      "date": "2026-11-22",
+      "kind": "attestation",
+      "outcome": "fail",
+      "ref": "a"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "an assessor's fail",
+   "p_holds": 0.05263157894736843,
+   "today": "2026-11-22"
+  },
+  {
+   "build": "2026.11.0",
+   "control": "GATE-3",
+   "entry": {
+    "observations": [
+     {
+      "build": "2026.10.0",
+      "checks": 3,
+      "date": "2026-11-22",
+      "kind": "probe",
+      "outcome": "clean",
+      "probe": "isolation"
+     }
+    ],
+    "status": "not_assessed"
+   },
+   "model": {
+    "assessor_fail": {
+     "if_broken": 0.9,
+     "if_holds": 0.05
+    },
+    "attestation": {
+     "independent": {
+      "if_broken": 0.08,
+      "if_holds": 0.9
+     },
+     "self": {
+      "if_broken": 0.3,
+      "if_holds": 0.9
+     }
+    },
+    "costs": {
+     "independent": 8,
+     "probe": 1,
+     "self": 3
+    },
+    "coverage": {
+     "agent": {
+      "AGENT-4": 0.4,
+      "MEM-1": 0.6
+     },
+     "claims": {
+      "AGENT-1": 0.4,
+      "LOG-1": 0.4
+     },
+     "egress": {
+      "TRUST-1": 0.5,
+      "TRUST-2": 0.7
+     },
+     "isolation": {
+      "GATE-3": 0.6,
+      "TEST-1": 0.3
+     },
+     "log": {
+      "LOG-2": 0.6
+     },
+     "restore": {
+      "BASE-4": 0.6
+     },
+     "rls": {
+      "GATE-3": 0.4
+     },
+     "stack": {
+      "GATE-3": 0.3
+     },
+     "tls": {
+      "BASE-2": 0.4
+     }
+    },
+    "detection": {
+     "claims": 0.3,
+     "default": 0.15,
+     "egress": 0.4,
+     "log": 0.9,
+     "restore": 0.9,
+     "rls": 0.5,
+     "stack": 0.5,
+     "tls": 0.9
+    },
+    "false_positive": 0.02,
+    "finding_if_broken": 0.9,
+    "half_life_days": 180,
+    "other_build_weight": 0.25,
+    "prior": 0.5,
+    "typical_checks": {
+     "default": 10,
+     "log": 1,
+     "restore": 1,
+     "tls": 1
+    }
+   },
+   "name": "evidence from another build counts a quarter",
+   "p_holds": 0.515191856277732,
+   "today": "2026-11-22"
+  }
+ ],
+ "description": "P(control holds) from the prior and the latest observation per source. Each observation adds weight * ln(P(obs | holds) / P(obs | broken)) to the log-odds; weight = 0.5 ^ (age_days / half_life_days), times other_build_weight when the observation is about another build. A newer observation from the same source replaces the older one. Probabilities are clamped to [1e-6, 1 - 1e-6]. Match to 1e-9.",
+ "kind": "belief",
+ "spec": "0.1"
+}

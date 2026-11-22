@@ -1,0 +1,23 @@
+# Changelog
+
+Changes to the standard (profile, spec, vectors) are marked **standard**.
+
+## Unreleased
+
+### Added
+- `pz check`: zero-setup scan of a project folder with plain-language fixes, `--json`, `--sarif`, `pz:ignore` suppression and a `patient_zero.checks` plugin point. Rules are data in `patient_zero/data/check_rules.yaml`.
+- `pz mcp`: a read-only Model Context Protocol server. A Claude Code skill, an agent instructions snippet, a GitHub Action and a pre-commit hook under `integrations/` and the repository root.
+- `pz bundle` and `docs/verify/`: a one-file evidence bundle and a browser page that verifies it offline.
+- `pz badge`: a badge that states what a seal says and links to the evidence. `TRADEMARK.md` sets the rules.
+- `pz seal --domain`, `pz identity`, `pz verify --check-domain`: tie a signing key to a domain. `--check-domain` is the only command that opens a connection the user did not put in a target file.
+- `pz cosign`: a second party signs an existing seal.
+- **standard** A signed `summary` and optional `signer.domain` in the seal head; co-signature, bundle and identity schemas. Seals made before this still verify.
+- **standard** `spec/SPEC.md` and conformance vectors in `patient_zero/data/vectors/`; `pz conformance`; `tools/run_vectors.js` for the JavaScript verifier.
+- `pz calibration --export` and `--pool`, and `calibration-data/`.
+- `GOVERNANCE.md`, `MAINTAINERS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `TRADEMARK.md`, `ROADMAP.md`.
+- **standard** CONSENT family (eight controls) and Nevada item NV-6. Profile is 51 controls.
+- Target files must list `authorized_hosts`. Existing target files need the new field.
+
+## 0.1.0
+
+First draft: 43 controls, reference safeguards, nine probes, belief model, signed seals.

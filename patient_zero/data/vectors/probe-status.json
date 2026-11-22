@@ -1,0 +1,129 @@
+{
+ "cases": [
+  {
+   "after": "partial",
+   "before": {
+    "evidence": [],
+    "note": "",
+    "observations": [],
+    "source": null,
+    "status": "not_assessed"
+   },
+   "checks": 3,
+   "finding": false,
+   "name": "a clean run lifts not_assessed to partial, never to pass",
+   "probe": "isolation"
+  },
+  {
+   "after": "fail",
+   "before": {
+    "evidence": [],
+    "note": "",
+    "observations": [],
+    "source": null,
+    "status": "not_assessed"
+   },
+   "checks": 3,
+   "finding": true,
+   "name": "a finding fails the control",
+   "probe": "isolation"
+  },
+  {
+   "after": "fail",
+   "before": {
+    "evidence": [
+     "e.png"
+    ],
+    "note": "",
+    "observations": [],
+    "source": "assessor",
+    "status": "pass"
+   },
+   "checks": 3,
+   "finding": true,
+   "name": "a finding overrides a person's pass",
+   "probe": "isolation"
+  },
+  {
+   "after": "pass",
+   "before": {
+    "evidence": [
+     "e.png"
+    ],
+    "note": "",
+    "observations": [],
+    "source": "assessor",
+    "status": "pass"
+   },
+   "checks": 3,
+   "finding": false,
+   "name": "a clean run does not undo a person's pass",
+   "probe": "isolation"
+  },
+  {
+   "after": "fail",
+   "before": {
+    "evidence": [
+     "e.png"
+    ],
+    "note": "",
+    "observations": [],
+    "source": "assessor",
+    "status": "fail"
+   },
+   "checks": 3,
+   "finding": false,
+   "name": "a clean run does not undo a person's fail",
+   "probe": "isolation"
+  },
+  {
+   "after": "partial",
+   "before": {
+    "evidence": [
+     "e.png"
+    ],
+    "note": "",
+    "observations": [],
+    "source": "probe:isolation",
+    "status": "fail"
+   },
+   "checks": 3,
+   "finding": false,
+   "name": "a clean rerun lifts the same probe's own fail to partial",
+   "probe": "isolation"
+  },
+  {
+   "after": "not_assessed",
+   "before": {
+    "evidence": [],
+    "note": "",
+    "observations": [],
+    "source": null,
+    "status": "not_assessed"
+   },
+   "checks": 0,
+   "finding": false,
+   "name": "a run with no checks is void and changes nothing",
+   "probe": "isolation"
+  },
+  {
+   "after": "fail",
+   "before": {
+    "evidence": [
+     "e.png"
+    ],
+    "note": "",
+    "observations": [],
+    "source": "probe:isolation",
+    "status": "fail"
+   },
+   "checks": 0,
+   "finding": false,
+   "name": "a void run does not lift a fail",
+   "probe": "isolation"
+  }
+ ],
+ "description": "How one probe run changes one control's status. A probe can fail a control; it cannot pass one.",
+ "kind": "probe-status",
+ "spec": "0.1"
+}

@@ -10,8 +10,10 @@ from . import (
     __version__,
     assess,
     auditlog,
+    badge as badge_mod,
     bayes,
     buyer,
+    check as check_mod,
     coverage,
     hidden,
     html,
@@ -266,7 +268,35 @@ def _cmd_predict(args) -> int:
 
 
 def _cmd_calibration(args) -> int:
+    if args.pool:
+        import glob
+        import os
+
+        docs = []
+        for path in sorted(glob.glob(os.path.join(args.pool, "*.json"))):
+            with open(path, "r", encoding="utf-8") as fh:
+                docs.append(json.load(fh))
+        pooled = bayes.pooled_calibration(docs)
+        if args.json:
+            print(json.dumps(pooled, indent=2))
+            return EXIT_OK
+        print(f"{pooled['settled']} settled predictions from {pooled['files']} contributed file(s)")
+        for r in pooled["probes"]:
+            model = f"{r['brier_model']:.3f}" if r["brier_model"] is not None else "  n/a"
+            print(f"  {r['probe']:<10} {r['settled']:>4} settled  came back clean {r['clean_rate'] * 100:3.0f}%  "
+                  f"Brier: people {r['brier_people']:.3f}, belief.yaml {model}")
+        if pooled["settled"] < 100:
+            print("  Fewer than 100 settled predictions. Too few to change the numbers in belief.yaml; keep contributing.")
+        return EXIT_OK
     data = assess.load(args.assessment)
+    if args.export:
+        exported = bayes.export_calibration(data)
+        with open(args.export, "w", encoding="utf-8") as fh:
+            json.dump(exported, fh, indent=2, sort_keys=True)
+            fh.write("\n")
+        print(f"wrote {args.export}: {len(exported['records'])} settled prediction(s), no names, no product, months only")
+        print("Read it before you share it. To contribute it, see calibration-data/README.md.")
+        return EXIT_OK
     rows = bayes.calibration(data)
     still_open = sum(1 for q in data.get("predictions") or [] if q["outcome"] is None)
     if args.json:
@@ -323,12 +353,96 @@ def _cmd_keygen(args) -> int:
 
 
 def _cmd_seal(args) -> int:
-    document = seal_mod.seal(args.assessment, args.key, args.output, signer_name=args.signer or "")
+    document = seal_mod.seal(args.assessment, args.key, args.output, signer_name=args.signer or "", domain=args.domain)
     head = document["head"]
     print(f"sealed {head['item_count']} files  root {head['merkle_root']}")
     print(f"signed by {head['signer']['public_key']}" + (f"  follows {head['previous_root'][:16]}..." if head["previous_root"] else ""))
+    if head["signer"].get("domain"):
+        print(f"claims {head['signer']['domain']}: publish the key there with `pz identity`, or the claim cannot be checked")
+    else:
+        print("no --domain given: this key proves the same key signed each seal, not who holds it")
     print(f"wrote {args.output}")
     return EXIT_OK
+
+
+def _print_description(document) -> None:
+    info = seal_mod.describe(document)
+    signer = info["signer"]
+    print(f"  {info['product']}  level {info['level']}  profile {info['profile_version']}")
+    print(f"  sealed {seal_mod.age_phrase(info['age_days'])} ({info['sealed_at']}) by {signer.get('name') or 'an unnamed signer'}"
+          + (f", claiming {signer['domain']}" if signer.get("domain") else ""))
+    summary = info["summary"]
+    if summary:
+        print(f"  {summary['confirmed']} of {summary['controls']} safeguards confirmed by a person "
+              f"({summary['confirmed_by_independent']} by someone independent), {summary['tested_clean_only']} tested clean only, "
+              f"{summary['failed']} failing, {summary['not_assessed']} not assessed"
+              + (f"; build {summary['build']}" if summary.get("build") else ""))
+    for c in info["cosigners"]:
+        print(f"  co-signed by {c['name']} as {c['role']}" + (f", claiming {c['domain']}" if c.get("domain") else "")
+              + (f": \"{c['statement']}\"" if c.get("statement") else ""))
+    if info["age_days"] is not None and info["age_days"] > 365:
+        print("  NOTE: this seal is more than a year old. Ask for a current one.")
+
+
+def _cmd_cosign(args) -> int:
+    errors = seal_mod.verify_seal(args.seal)
+    if errors:
+        return _report_errors(errors, "")
+    body = seal_mod.cosign(args.seal, args.key, args.name, args.role, args.statement or "", args.domain)
+    print(f"co-signed as {body['role']} with {body['signer']['public_key']}")
+    print(f"updated {args.seal}. The original signature and every sealed file are unchanged.")
+    return EXIT_OK
+
+
+def _cmd_identity(args) -> int:
+    keys = list(args.public_key or [])
+    if args.key:
+        keys.append(seal_mod.generate_keypair(bytes.fromhex(seal_mod._read_key(args.key)))[1])
+    if not keys:
+        print("pz identity needs --key or --public-key", file=sys.stderr)
+        return EXIT_USAGE
+    document = seal_mod.identity_document(args.domain, keys, args.retired)
+    with open(args.output, "w", encoding="utf-8") as fh:
+        json.dump(document, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+    print(f"wrote {args.output}. Publish it at https://{document['domain']}{seal_mod.IDENTITY_PATH}")
+    print("Anyone can then run `pz verify --check-domain` to confirm the key that signed your seals is yours.")
+    return EXIT_OK
+
+
+def _cmd_bundle(args) -> int:
+    packed = seal_mod.bundle(args.seal, args.output)
+    print(f"wrote {args.output}: the seal and {len(packed['files'])} files in one file")
+    print("Send it to a buyer. They can check it with `pz verify <file>` or by dropping it on docs/verify/index.html in a browser.")
+    return EXIT_OK
+
+
+def _cmd_badge(args) -> int:
+    with open(args.seal, "r", encoding="utf-8") as fh:
+        document = json.load(fh)
+    document = document.get("seal", document)
+    errors = seal_mod._check_head(document, None)
+    if errors:
+        return _report_errors(errors, "")
+    with open(args.output, "w", encoding="utf-8") as fh:
+        fh.write(badge_mod.svg(document))
+    print(f"wrote {args.output}: {badge_mod.message(document)}")
+    print("\nPaste this where you show the badge. The badge must link to the sealed evidence (see TRADEMARK.md):\n")
+    print(badge_mod.markdown(document, args.report_url, args.output))
+    return EXIT_OK
+
+
+def _cmd_mcp(args) -> int:
+    from . import mcp
+
+    return mcp.serve()
+
+
+def _cmd_conformance(args) -> int:
+    from . import conformance
+
+    failures = conformance.run(args.vectors)
+    return _report_errors(failures, f"CONFORMS: every vector in {args.vectors or 'the bundled set'} reproduced")
 
 
 def _report_errors(errors, ok_message) -> int:
@@ -341,8 +455,20 @@ def _report_errors(errors, ok_message) -> int:
 
 
 def _cmd_verify(args) -> int:
-    errors = seal_mod.verify_seal(args.seal, expect_public_key=args.public_key)
-    return _report_errors(errors, "VERIFIED: signature valid, Merkle root matches, every file unchanged")
+    with open(args.seal, "r", encoding="utf-8") as fh:
+        document = json.load(fh)
+    if isinstance(document, dict) and document.get("schema") == seal_mod.BUNDLE_SCHEMA:
+        errors, document = seal_mod.verify_bundle(args.seal, expect_public_key=args.public_key)
+    else:
+        errors = seal_mod.verify_seal(args.seal, expect_public_key=args.public_key)
+    if not errors and args.check_domain:
+        errors = seal_mod.check_domains(document)
+    code = _report_errors(errors, "VERIFIED: signature valid, Merkle root matches, every file unchanged"
+                          + (", and each signer's domain lists their key" if args.check_domain else ""))
+    if not errors:
+        _print_description(document)
+        print("  This shows the files are what was signed. It does not show the claims in them are true.")
+    return code
 
 
 def _cmd_prove(args) -> int:
@@ -359,6 +485,25 @@ def _cmd_verify_proof(args) -> int:
         proof = json.load(fh)
     errors = seal_mod.verify_proof(proof, args.file, expect_public_key=args.public_key)
     return _report_errors(errors, "VERIFIED: this file is part of the signed assessment")
+
+
+def _cmd_check(args) -> int:
+    result = check_mod.run(args.path, register=args.register, include_tests=args.include_tests, exclude=args.exclude or [])
+    if args.sarif:
+        text = json.dumps(check_mod.to_sarif(result), indent=2) + "\n"
+    elif args.json:
+        text = json.dumps(result.to_dict(), indent=2) + "\n"
+    else:
+        text = check_mod.render_text(result, top=args.top)
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"wrote {args.output}: {len(result.issues)} finding(s) in {result.files} files")
+    else:
+        sys.stdout.write(text)
+    if result.void:
+        return EXIT_USAGE
+    return EXIT_FINDINGS if result.failed(args.fail_on) else EXIT_OK
 
 
 def _cmd_demo(args) -> int:
@@ -378,6 +523,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--profile", help="path to an alternate controls.yaml")
     parser.add_argument("--model", help="path to an alternate belief.yaml")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p = sub.add_parser("check", help="read a project folder and list the mistakes to fix first, in plain language")
+    p.add_argument("path", nargs="?", default=".")
+    p.add_argument("--register", help="subprocessor register (default: register.yaml found in the project)")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--sarif", action="store_true", help="SARIF 2.1.0 for GitHub code scanning and editors")
+    p.add_argument("-o", "--output")
+    p.add_argument("--top", type=int, default=3, help="how many to show as 'fix first'")
+    p.add_argument("--fail-on", choices=check_mod.SEVERITIES, default="medium", help="exit 1 at this severity or worse")
+    p.add_argument("--include-tests", action="store_true", help="also read test and fixture folders")
+    p.add_argument("--exclude", action="append", help="glob of paths to skip, repeatable")
+    p.set_defaults(func=_cmd_check)
 
     p = sub.add_parser("controls", help="list the controls")
     p.add_argument("--level", choices=profile_mod.LEVELS)
@@ -480,6 +637,8 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("calibration", help="score past predictions, yours and the model's")
     p.add_argument("assessment", nargs="?", default="assessment.yaml")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--export", metavar="FILE", help="write settled predictions with names and product removed, for pooling")
+    p.add_argument("--pool", metavar="DIR", help="score every contributed file in a directory, such as calibration-data/")
     p.set_defaults(func=_cmd_calibration)
 
     p = sub.add_parser("build", help="set the release under assessment; older evidence then counts for less")
@@ -504,12 +663,50 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("assessment", nargs="?", default="assessment.yaml")
     p.add_argument("--key", default="pz.key")
     p.add_argument("--signer", help="name to record beside the public key")
+    p.add_argument("--domain", help="a domain you control, where you publish the key with `pz identity`")
     p.add_argument("-o", "--output", default="seal.json")
     p.set_defaults(func=_cmd_seal)
 
-    p = sub.add_parser("verify", help="verify a seal and every file under it")
+    p = sub.add_parser("cosign", help="add a second party's signature to a seal: an assessor, a customer, counsel")
     p.add_argument("seal", nargs="?", default="seal.json")
+    p.add_argument("--key", required=True, help="the co-signer's own key, not the one that sealed")
+    p.add_argument("--name", required=True)
+    p.add_argument("--role", required=True, choices=seal_mod.ROLES)
+    p.add_argument("--statement", help="what the co-signer is saying, in their own words")
+    p.add_argument("--domain", help="a domain the co-signer controls")
+    p.set_defaults(func=_cmd_cosign)
+
+    p = sub.add_parser("identity", help="write the file that ties your signing key to your domain")
+    p.add_argument("--domain", required=True)
+    p.add_argument("--key", help="private key file; only its public half is written")
+    p.add_argument("--public-key", action="append", help="an active public key, repeatable")
+    p.add_argument("--retired", action="append", help="a public key no longer in use, repeatable")
+    p.add_argument("-o", "--output", default="patient-zero.json")
+    p.set_defaults(func=_cmd_identity)
+
+    p = sub.add_parser("bundle", help="pack a seal and its files into one file a buyer can verify in a browser")
+    p.add_argument("seal", nargs="?", default="seal.json")
+    p.add_argument("-o", "--output", default="patient-zero-bundle.json")
+    p.set_defaults(func=_cmd_bundle)
+
+    p = sub.add_parser("badge", help="a badge that states what a seal says and links to the evidence")
+    p.add_argument("seal", nargs="?", default="seal.json", help="seal.json or a bundle")
+    p.add_argument("--report-url", required=True, help="where the sealed evidence can be downloaded and verified")
+    p.add_argument("-o", "--output", default="patient-zero-badge.svg")
+    p.set_defaults(func=_cmd_badge)
+
+    p = sub.add_parser("mcp", help="serve patient-zero's read-only tools to a coding agent over stdio (Model Context Protocol)")
+    p.set_defaults(func=_cmd_mcp)
+
+    p = sub.add_parser("conformance", help="run the spec's test vectors against this implementation")
+    p.add_argument("vectors", nargs="?", help="directory of vector files (default: the bundled set)")
+    p.set_defaults(func=_cmd_conformance)
+
+    p = sub.add_parser("verify", help="verify a seal and every file under it")
+    p.add_argument("seal", nargs="?", default="seal.json", help="seal.json or a one-file bundle")
     p.add_argument("--public-key", help="require this signer")
+    p.add_argument("--check-domain", action="store_true",
+                   help="also fetch https://<domain>/.well-known/patient-zero.json for each signer (opens a network connection)")
     p.set_defaults(func=_cmd_verify)
 
     p = sub.add_parser("prove", help="prove one evidence file belongs to a seal without revealing the rest")

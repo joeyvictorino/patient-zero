@@ -11,6 +11,14 @@ pz demo
 
 `pz demo` starts a deliberately broken AI app on localhost, investigates it, patches it, and investigates again. It needs no network, no account and no API key.
 
+Three ways in, depending on who you are:
+
+| You are | Start with |
+| --- | --- |
+| Building a health app yourself, often with an AI coding tool | [`pz check .`](#check-your-own-project-in-ten-seconds): no setup, plain-language fixes |
+| A vendor who has to show a clinic what you tested | [Seal it, bundle it, badge it](#show-a-customer-what-you-tested) |
+| A clinic or health system deciding on a vendor | [Verify what they sent you](#if-you-buy-ai-tools-rather-than-build-them), in a browser |
+
 The short version, in plain language (`pz demo --brief`):
 
 ![pz demo --brief](docs/demo.gif)
@@ -84,7 +92,9 @@ You run a practice, a clinic or a health system, and a vendor wants your patient
 - [The questions to send a vendor](docs/VENDOR-QUESTIONNAIRE.md): all 51 safeguards in plain language, each with the question to ask and what a good answer comes with
 - [What Nevada law adds](docs/NEVADA.md): AB 406 (2025) on AI in mental and behavioral health care, SB 370 on consumer health data, and consent before recording a call
 
-A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and a signed evidence bundle.
+A vendor who uses this tool can hand you a plain-language summary (`pz report --executive`) and one signed file of evidence. To check that file, open [`docs/verify/index.html`](docs/verify/index.html) in a browser and drop it in. Nothing is installed and nothing is uploaded. The page tells you whether the evidence is unchanged since it was signed, how old it is, who signed it, and how many safeguards a person has confirmed, in plain numbers. It never says "compliant", because no tool can.
+
+![The verify page](docs/verify.png)
 
 ## Why this exists
 
@@ -149,9 +159,38 @@ def test_tenants_cannot_read_each_other(client):
 
 It works with FastAPI, Starlette, httpx and requests-shaped clients, with Flask and Werkzeug test clients, and with any bare WSGI app. The test fails on a cross-tenant read, and also when no route could be tested at all. `assert_agent_contained` does the same for the agent probe.
 
-## Try it on your own stack in ten seconds
+## Check your own project in ten seconds
 
-No target file, no running app. Point it at any directory with a Docker Compose file:
+```
+pz check .
+```
+
+No target file, no running app, no account, no network. It reads the project folder and lists what to fix first:
+
+```
+NOT READY for real patient data. 8 thing(s) to fix, starting with these 3:
+
+1. [CRITICAL] The AI model is called straight from the browser  (BASE-2)
+     src/lib/ai.ts:2
+     Why it matters: To call the model from the browser, the page must carry your model key, and patient
+     text goes from the patient's device to the model company with nothing of yours in between.
+     Fix: Move the model call to a server route. The browser talks to your server; your server talks to the model.
+
+2. [HIGH] Patient data can reach OpenAI, and nothing on file says an agreement covers it  (TRUST-1)
+     ...
+What this could not check:
+  - whether a signed-in user can open another patient's or another clinic's records
+  ...
+A clean check is not a pass, and this is not a HIPAA certification. None exists.
+```
+
+It looks for keys written into code or exposed to the browser, a committed `.env`, AI model and transcription companies with no agreement in your `register.yaml`, session recorders and analytics, patient data in log lines, certificate checks switched off, wildcard CORS, audio recording, tables without row level security, and an exposed Docker stack. It never prints a secret it finds. `--json` and `--sarif` are for tools; a line marked `pz:ignore <reason>` is skipped and reported as skipped.
+
+It is a list of text patterns. It misses things and it flags things that are fine, and it cannot see the flaw that matters most, which is who can read whose records. [Its limits are written down.](known-gaps/things-that-do-not-work/20261122-pz-check-is-a-list-of-patterns.md)
+
+**Let your coding agent run it.** `pz mcp` is a read-only Model Context Protocol server; there is a Claude Code skill, a snippet for any agent's instructions file, a GitHub Action and a pre-commit hook. See [`integrations/`](integrations/README.md).
+
+The two static probes behind it also run on their own. Point one at any directory with a Docker Compose file:
 
 ```
 pz probe stack --path .
@@ -167,6 +206,29 @@ pz probe rls --path supabase/migrations
 
 It reads the SQL in order and reports tables that end up without row level security, and policies that say `USING (true)`.
 
+## Show a customer what you tested
+
+```
+pz seal --signer "Acme Health" --domain acme.example      # sign the assessment and every evidence file
+pz identity --domain acme.example --key pz.key            # publish the output at acme.example/.well-known/patient-zero.json
+pz cosign --key assessor.key --name "Example Assessors" --role independent-assessor --statement "Reviewed ..."
+pz bundle                                                 # one file to send
+pz badge --report-url https://acme.example/trust/         # a badge that links to it
+```
+
+The customer drops the bundle on the [verify page](docs/verify/index.html), or runs `pz verify patient-zero-bundle.json`:
+
+```
+VERIFIED: signature valid, Merkle root matches, every file unchanged
+  Acme Scribe  level L1  profile 0.1
+  sealed today by Acme Health, claiming acme.example
+  2 of 43 safeguards confirmed by a person (1 by someone independent), 0 tested clean only, 0 failing, 41 not assessed; build 2026.11.1
+  co-signed by Example Assessors LLC as independent-assessor: "Reviewed MFA evidence for build 2026.11.1."
+  This shows the files are what was signed. It does not show the claims in them are true.
+```
+
+The counts are inside the signature, so they cannot be improved after signing. The badge reads `patient-zero | L1 · 2/43 confirmed · sealed 2026-11-22`. It is never green and never says "compliant", "certified" or "passed": it states what the seal states and links to the evidence. [`TRADEMARK.md`](TRADEMARK.md) has the rules for using the name.
+
 ## Signed evidence, disclosed one file at a time
 
 ```
@@ -180,7 +242,17 @@ pz verify-proof proof.json evidence/pentest.json --public-key <yours>
 
 A customer asks for your pentest evidence. You send that one file and `proof.json`. They can check it belongs to your signed assessment without seeing any other file, or even the other file names. Each new seal records the root of the one before it, so reassessments form a chain.
 
-The Merkle tree and the Ed25519 implementation are standard library only, checked against the RFC 8032 test vectors. A key you generated proves the same key signed each seal, not who holds it: publish the public key somewhere you control, or have your assessor sign.
+The Merkle tree and the Ed25519 implementation are standard library only, checked against the RFC 8032 test vectors. A key you generated proves the same key signed each seal, not who holds it. `--domain` and `pz identity` tie it to a website you control, and `pz cosign` lets an assessor, a customer or counsel add their own signature. That is as strong as control of the domain, and [no stronger](known-gaps/things-that-do-not-work/20261111-self-generated-keys-prove-continuity-not-identity.md).
+
+## A standard, not just a tool
+
+For patient-zero to be something a whole field can rely on, it cannot belong to one codebase.
+
+- [`spec/SPEC.md`](spec/SPEC.md) is the standard: the profile, the rules for statuses, the belief arithmetic and the seal format, separate from this implementation.
+- [`patient_zero/data/vectors/`](patient_zero/data/vectors/) holds test vectors as plain JSON. An implementation in any language conforms when it reproduces them. `pz conformance` runs them here. The browser verifier is a second implementation and passes the same ones (`node tools/run_vectors.js`).
+- [`GOVERNANCE.md`](GOVERNANCE.md) says how the standard changes and who decides. [`MAINTAINERS.md`](MAINTAINERS.md) lists the reviewer seats, all of them open: a health privacy lawyer, a clinician, a Nevada lawyer, an assessor, a statistician.
+- [`calibration-data/`](calibration-data/README.md) is where settled predictions are pooled, without names, so the guesses in `belief.yaml` can become measurements.
+- [`ROADMAP.md`](ROADMAP.md) says what is built, what is not, and what needs people and not code.
 
 ## The profile
 
@@ -252,6 +324,7 @@ pz report --executive                            # one page in plain language fo
 pz questionnaire --level L1 --overlay nevada     # what a buyer will ask you
 pz scan site-copy.txt --care-claims              # wording that presents an AI as a therapist (Nevada AB 406)
 pz report --strict                               # exit 1 unless conformant, for CI
+pz calibration --export pooled.json              # your settled predictions without names, to contribute
 ```
 
 | Probe | Tests | Controls |
@@ -275,17 +348,19 @@ Rules the tooling enforces:
 - A probe can fail a control. It cannot pass one. A clean run sets `partial`; a person records `pass` with evidence.
 - A finding is a theory until it reproduces. Network probes ask a second time before reporting, and a one-off goes to the notes, not the findings.
 - Every probe run writes a dated, hashed JSON file under `evidence/`.
+- Nothing the tooling prints, signs or draws says "compliant", "certified" or "passed". A seal carries counts, a badge shows them, and tests fail if those words appear.
 
 Want to try the probes by hand first? `pz demo --serve` runs the broken app on port 8099, and `pz demo --serve --patched` runs the fixed one.
 
 ## No telemetry
 
-patient-zero collects nothing and phones nowhere. The only network traffic it ever creates goes to the `base_url` you put in the target file, and the demo stays on 127.0.0.1. A test in the suite fails if the demo opens a connection to anything but loopback.
+patient-zero collects nothing and phones nowhere. It opens a network connection in two cases only, both of which you ask for: probes talk to the `base_url` you put in the target file, and `pz verify --check-domain` fetches a signer's published key from the domain named in the seal. Everything else, including `pz check`, `pz verify`, `pz mcp` and the verify page, works offline. The demo stays on 127.0.0.1, and tests in the suite fail if the demo reaches anything but loopback or if `pz verify` fetches anything without the flag.
 
 ## What this is not
 
 - **Not a HIPAA certification.** HHS does not issue or recognize one. This produces evidence for a customer or an external assessor.
 - **Not a NIST publication**, and not legal advice. Every HIPAA paragraph cited was checked to exist in eCFR on 2026-11-10; whether it is the right home for a control is the author's judgment. The SP 800-53 and CSF identifiers are unchecked.
+- **Not a code review.** `pz check` matches text patterns. It finds common mistakes quickly and misses anything it has no pattern for.
 - **Not a pentest.** Nine probes touch 11 of 51 controls. The other 40 need a person, and so does the final call on those 11. [`docs/COVERAGE.md`](docs/COVERAGE.md) is generated from the code and lists every control.
 - **Not battle-tested.** Draft 0.1, one author, proven only against its own demo app. The agent probe plants one instruction per carrier in four dressings; current models shrug off naive injections, so a clean result says little, and the score reflects that. A model may also behave differently when it can tell it is being tested, which is why the markers look like ordinary words and the user agent is configurable.
 - **Not a consent or ethics review.** The CONSENT family asks whether patients are told about AI, can decline it, are recorded only with agreement, and are not treated worse by it. Its citations were checked against eCFR and the Nevada statutes on 2026-11-21, including the HIPAA Privacy Rule changes published 2026-11-19, but no lawyer has reviewed them, and none of its controls has a probe. An IRB, an ethics committee or counsel still makes those calls.
@@ -325,6 +400,10 @@ Embedded mode, the generated coverage table and the `known-gaps` directory follo
 
 ## Help wanted
 
+- One vendor and one clinic willing to run it together and publish what they learn
+- People to fill the reviewer seats in [`MAINTAINERS.md`](MAINTAINERS.md)
+- Rules for `pz check` from people who review these apps, and a corpus of sample apps to measure it against
+- Runs of the integrations in their real hosts (Claude Code, Cursor, GitHub Actions, pre-commit), with what broke
 - Settled predictions from real assessments (`pz calibration --json`), or better arguments for the numbers in `belief.yaml`
 - Review of the control wording and mappings by people who do HIPAA assessments
 - More probes: agent permission escalation, memory deletion, and a live test of the action gate

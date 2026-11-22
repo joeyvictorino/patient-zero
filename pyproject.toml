@@ -22,7 +22,7 @@ pz = "patient_zero.cli:main"
 include = ["patient_zero*"]
 
 [tool.setuptools.package-data]
-patient_zero = ["data/*.yaml", "data/overlays/*.yaml"]
+patient_zero = ["data/*.yaml", "data/overlays/*.yaml", "data/vectors/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

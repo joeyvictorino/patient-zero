@@ -1,0 +1,56 @@
+name: patient-zero check
+description: Read the repository for the mistakes that show up in AI-built health apps, and list what to fix first in plain language. Not a certification.
+branding:
+  icon: activity
+  color: gray-dark
+inputs:
+  path:
+    description: Folder to check
+    default: "."
+  fail-on:
+    description: Fail the job at this severity or worse (critical, high, medium, low)
+    default: medium
+  upload-sarif:
+    description: "Upload findings to GitHub code scanning (needs the security-events write permission)"
+    default: "false"
+  python-version:
+    description: Python used to run the check
+    default: "3.12"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install patient-zero
+      shell: bash
+      run: python -m pip install --quiet "$GITHUB_ACTION_PATH"
+    - name: Check
+      id: check
+      shell: bash
+      env:
+        PZ_PATH: ${{ inputs.path }}
+        PZ_FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        pz check "$PZ_PATH" --sarif -o patient-zero.sarif --fail-on low || true
+        code=0
+        pz check "$PZ_PATH" --fail-on "$PZ_FAIL_ON" > patient-zero-summary.txt || code=$?
+        { echo '```'; cat patient-zero-summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        cat patient-zero-summary.txt
+        echo "exit=$code" >> "$GITHUB_OUTPUT"
+    - name: Upload to code scanning
+      if: ${{ inputs.upload-sarif == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: patient-zero.sarif
+        category: patient-zero
+    - name: Result
+      shell: bash
+      env:
+        PZ_EXIT: ${{ steps.check.outputs.exit }}
+      run: |
+        if [ "$PZ_EXIT" != "0" ]; then
+          echo "patient-zero found things to fix. See the job summary."
+          exit 1
+        fi
+        echo "Nothing found at this threshold. That is not a pass; see the job summary for what was not checked."

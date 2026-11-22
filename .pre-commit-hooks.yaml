@@ -1,0 +1,7 @@
+- id: patient-zero-check
+  name: patient-zero check
+  description: Mistakes that show up in AI-built health apps, in plain language. Not a certification.
+  entry: pz check . --fail-on high
+  language: python
+  pass_filenames: false
+  always_run: true
