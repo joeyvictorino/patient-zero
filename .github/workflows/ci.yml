@@ -2,10 +2,14 @@ name: ci
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.9", "3.11", "3.13"]
+        include:
+          - {python: "3.9", os: ubuntu-22.04}     # the newest runner image no longer offers 3.9
+          - {python: "3.11", os: ubuntu-latest}
+          - {python: "3.13", os: ubuntu-latest}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
