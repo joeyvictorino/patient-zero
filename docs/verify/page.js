@@ -136,5 +136,14 @@
   ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", (e) => e.dataTransfer.files.length && run(e.dataTransfer.files));
   $("again").addEventListener("click", () => last && run(last.map((f) => new File([f.bytes], f.name))));
+  const sample = (name) => () => {
+    const text = JSON.stringify(window.PZ_SAMPLES[name]);
+    run([new File([text], "sample-bundle.json")]).then(() => $("notes").prepend(
+      el("p", "This is a made-up sample: the product, the vendor and the assessor do not exist.", "note")));
+  };
+  if (window.PZ_SAMPLES) {
+    $("sampleGood").addEventListener("click", sample("good"));
+    $("sampleEdited").addEventListener("click", sample("edited"));
+  }
   window.pzRun = run;   // for tests
 })();

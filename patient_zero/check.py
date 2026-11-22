@@ -22,6 +22,7 @@ import json
 import os
 import re
 import subprocess
+import textwrap
 from dataclasses import asdict, dataclass, field
 from importlib import metadata, resources
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
@@ -170,7 +171,7 @@ def _is_service_role(token: str) -> bool:
 
 _JWT = re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}")
 _PLAIN_STRING = re.compile(r"""(?<![fFbBrR])"[^"{}$\n]*"|(?<![fFbBrR])'[^'{}$\n]*'""")
-_ENV_VALUE = re.compile(r"^\s*(?:export\s+)?([A-Z][A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|PASS|PWD|DSN|DATABASE_URL)[A-Z0-9_]*)"
+_ENV_VALUE = re.compile(r"^\s*(?:export\s+)?([A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|PASS|PWD|DSN|DATABASE_URL)[A-Z0-9_]*)"
                         r"\s*=\s*['\"]?([^\s'\"#]{8,})")
 _PLACEHOLDER = re.compile(r"(?i)^(?:your|xxx|changeme|change-me|example|placeholder|todo|<|\$\{|dummy|test|fake|sk-\.\.\.)")
 
@@ -217,39 +218,53 @@ def run(path: str = ".", register: Optional[str] = None, include_tests: bool = F
             continue
         try:
             with open(os.path.join(root, rel), "r", encoding="utf-8", errors="strict") as fh:
-                lines = fh.read().splitlines()
+                whole = fh.read()
         except (UnicodeDecodeError, OSError):
             continue
+        lines = whole.splitlines()
         name = rel.rsplit("/", 1)[-1]
         if kind == "env" and not name.endswith(ENV_EXAMPLES):
             real = [m for m in map(_ENV_VALUE.match, lines) if m and not _PLACEHOLDER.match(m.group(2))]
             if real:
                 add(_issue(rules["env_file"], "env-file-committed", rel, 0, f"{len(real)} value(s), such as {real[0].group(1)}"), "")
+        # Cheap test first: a rule's hints are plain text every match contains. Most files contain none, and no pattern runs on them.
+        lowered = whole.lower()
+
+        def hinted(spec: Dict[str, Any], text: str = lowered) -> bool:
+            return not spec.get("hints") or any(h in text for h in spec["hints"])
+
+        live_secrets = [(spec, pattern) for spec, pattern in secret_rules if spec.get("hint", "") in whole]
+        live_lines = [(spec, pattern) for spec, pattern in line_rules
+                      if not (spec["files"] == "code" and kind != "code") and not (spec["files"] == "config" and kind != "config")
+                      and hinted(spec)]
+        has_jwt = "eyJ" in whole
+        has_log = kind == "code" and hinted(rules["log_rule"])
+        live_providers = [(spec, pattern) for spec, pattern in providers
+                          if kind == "code" and spec["name"] not in seen_providers and hinted(spec)]
+        if not (live_secrets or live_lines or has_jwt or has_log or live_providers):
+            continue
         for number, text in enumerate(lines, 1):
             if len(text) > 2000:
                 continue
-            for spec, pattern in secret_rules:
+            for spec, pattern in live_secrets:
                 m = pattern.search(text)
                 if m and not _PLACEHOLDER.match(m.group(0)[3:]):
                     add(_issue(rules["secret"], f"secret-{spec['id']}", rel, number, f"{spec['what']}: {_mask(m.group(0))}"), text)
                     break
-            for m in _JWT.finditer(text):
-                if _is_service_role(m.group(0)):
-                    add(_issue(rules["service_role"], "secret-supabase-service-role", rel, number, _mask(m.group(0))), text)
-            for spec, pattern in line_rules:
-                if spec["files"] == "code" and kind != "code":
-                    continue
-                if spec["files"] == "config" and kind != "config":
-                    continue
+            if has_jwt:
+                for m in _JWT.finditer(text):
+                    if _is_service_role(m.group(0)):
+                        add(_issue(rules["service_role"], "secret-supabase-service-role", rel, number, _mask(m.group(0))), text)
+            for spec, pattern in live_lines:
                 if pattern.search(text):
                     add(_issue(spec, spec["id"], rel, number), text)
-            if kind == "code":
+            if has_log:
                 call = log_call.search(text)
                 if call and log_words.search(_PLAIN_STRING.sub('""', text[call.end():])):
                     add(_issue(rules["log_rule"], rules["log_rule"]["id"], rel, number), text)
-                for spec, pattern in providers:
-                    if spec["name"] not in seen_providers and pattern.search(text) and IGNORE_MARK not in text:
-                        seen_providers[spec["name"]] = (rel, number)
+            for spec, pattern in live_providers:
+                if spec["name"] not in seen_providers and pattern.search(text) and IGNORE_MARK not in text:
+                    seen_providers[spec["name"]] = (rel, number)
 
     # Model providers against the register of who may receive patient data.
     register_path = find_register(root, files, register)
@@ -278,9 +293,13 @@ def run(path: str = ".", register: Optional[str] = None, include_tests: bool = F
                 "Enable row level security on the table and add a policy that limits rows to their owner. "
                 "A policy of USING (true) lets everyone through."),
     }
-    for probe, module in (("stack", stack_probe), ("rls", rls_probe)):
+    # Hand the probes the same file list everything else used, so ignored, excluded and test files stay out.
+    compose = [os.path.join(root, f) for f in files
+               if re.fullmatch(r"(?:docker-)?compose[^/]*\.ya?ml", f.rsplit("/", 1)[-1])]
+    sql = [os.path.join(root, f) for f in files if f.lower().endswith(".sql")]
+    for probe, module, chosen in (("stack", stack_probe, compose), ("rls", rls_probe, sql)):
         try:
-            findings = module.run(root).findings
+            findings = module.run(root, chosen).findings
         except ProbeRefused:
             result.skipped.append(probe)
             continue
@@ -308,7 +327,7 @@ def grouped(result: CheckResult) -> List[Dict[str, Any]]:
     return list(groups.values())
 
 
-def render_text(result: CheckResult, top: int = 3) -> str:
+def render_text(result: CheckResult, top: int = 3, width: int = 100) -> str:
     rules = load_rules()
     lines = [f"patient-zero check: {result.root}"]
     if result.void:
@@ -325,7 +344,9 @@ def render_text(result: CheckResult, top: int = 3) -> str:
                 lines.append(f"     {place}")
         if len(group["places"]) > 3:
             lines.append(f"     and {len(group['places']) - 3} more place(s)")
-        lines.extend([f"     Why it matters: {issue.why}", f"     Fix: {issue.fix}", ""])
+        for label, text in (("Why it matters", issue.why), ("Fix", issue.fix)):
+            lines.extend(textwrap.wrap(f"{label}: {text}", width=width, initial_indent="     ", subsequent_indent="       "))
+        lines.append("")
 
     if not groups:
         lines += ["Nothing found. That is not a pass: this looks for a short list of common mistakes.", ""]

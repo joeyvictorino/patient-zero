@@ -5,15 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "patient-zero"
 version = "0.1.0"
-description = "Open PHI safeguard profile for AI applications: machine-readable controls, reference safeguards, and probes."
+description = "Open checks for AI apps that touch patient data: a zero-setup scan, a safeguard profile, probes, and signed evidence a buyer can verify."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.9"
 authors = [{ name = "Joey Victorino" }]
+keywords = ["hipaa", "phi", "healthcare", "ai", "security", "llm", "compliance", "mcp"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Healthcare Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+
 dependencies = ["PyYAML>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/joeyvictorino/patient-zero"
+Issues = "https://github.com/joeyvictorino/patient-zero/issues"
+Changelog = "https://github.com/joeyvictorino/patient-zero/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+sign = ["cryptography>=41"]   # audited, constant-time Ed25519 for signing; verification never needs it
 
 [project.scripts]
 pz = "patient_zero.cli:main"

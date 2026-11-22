@@ -109,8 +109,14 @@ def test_cli_outputs_and_thresholds(vibe, tmp_path, capsys):
 
 
 def test_this_repository_checks_clean():
-    result = check.run(ROOT)
+    result = check.run(ROOT, exclude=["examples/vibe-clinic/*"])       # that folder is wrong on purpose
     assert result.files > 50 and [f"{i.rule} {i.file}:{i.line}" for i in result.issues] == []
+
+
+def test_the_example_app_shows_a_dozen_kinds_of_mistake_and_holds_no_real_secret():
+    result = check.run(os.path.join(ROOT, "examples", "vibe-clinic"))
+    assert len(check.grouped(result)) >= 12 and result.worst() == "critical"
+    assert not any(i.rule.startswith("secret-") for i in result.issues)     # nothing shaped like a real provider key is committed
 
 
 def test_rules_file_is_well_formed():
@@ -174,3 +180,54 @@ def test_integration_files_are_well_formed():
     assert front["name"] == "patient-zero" and len(front["description"]) < 1024
     for text in (skill, open(os.path.join(ROOT, "integrations", "AGENTS.md")).read()):
         assert "pz check ." in text and "compliant" in text and "pz:ignore" in text
+
+
+# --- every rule fires on a line written for it, so a hint can never hide a match ---
+
+SAMPLES = {
+    "browser-model-key": "const k = import.meta.env.VITE_ANTHROPIC_KEY",
+    "browser-model-call": "new OpenAI({ dangerouslyAllowBrowser: true })",
+    "tls-checks-off": "client := &tls.Config{InsecureSkipVerify: true}",
+    "cors-wildcard": 'res.setHeader("Access-Control-Allow-Origin", "*")',
+    "tracker-session-replay": 'import LogRocket from "logrocket"',
+    "tracker-analytics": 'import { Analytics } from "@vercel/analytics/react"',
+    "error-reporting": "Bugsnag.start()",
+    "browser-storage": 'sessionStorage.setItem("jwt", token)',
+    "audio-capture": "navigator.mediaDevices.getUserMedia({ audio: true })",
+}
+PROVIDER_SAMPLES = {
+    "OpenAI": "from langchain_openai import ChatOpenAI", "Anthropic": 'import Anthropic from "@anthropic-ai/sdk"',
+    "Google Gemini": 'import { GoogleGenAI } from "@google/genai"', "Groq": 'import Groq from "groq-sdk"',
+    "Mistral": "from mistralai import Mistral", "Cohere": "import cohere", "Together AI": 'fetch("https://api.together.xyz/v1")',
+    "OpenRouter": 'baseURL: "https://openrouter.ai/api/v1"', "DeepSeek": 'base_url="https://api.deepseek.com"',
+    "xAI": 'base_url="https://api.x.ai/v1"', "Perplexity": 'fetch("https://api.perplexity.ai/chat")', "Replicate": "import replicate",
+    "Hugging Face Inference": "client = InferenceClient()", "ElevenLabs": "from elevenlabs import play",
+    "Deepgram": 'import { createClient } from "@deepgram/sdk"', "AssemblyAI": "import assemblyai as aai",
+}
+
+
+def test_every_line_rule_and_provider_fires_on_its_sample(tmp_path):
+    rules = check.load_rules()
+    assert set(SAMPLES) == {r["id"] for r in rules["line_rules"]} and set(PROVIDER_SAMPLES) == {p["name"] for p in rules["providers"]}
+    for rule, line in SAMPLES.items():
+        folder = tmp_path / rule
+        write(folder, {"app.ts": line + "\n"})
+        assert rule in rules_of(check.run(str(folder))), rule
+    for name, line in PROVIDER_SAMPLES.items():
+        folder = tmp_path / name.replace(" ", "-")
+        write(folder, {"app.py": line + "\n"})
+        titles = [i.title for i in check.run(str(folder)).issues if i.rule == "model-provider-unlisted"]
+        assert any(name in t for t in titles), name
+    for spec in rules["line_rules"] + rules["providers"] + [rules["log_rule"]]:
+        assert all(h == h.lower() for h in spec.get("hints", [])), spec
+
+
+def test_check_is_fast_enough_for_a_large_project(tmp_path):
+    import time
+
+    body = "def handler(request):\n    value = compute(request)\n    return respond(value)\n" * 400
+    write(tmp_path, {f"pkg{n // 50}/module{n}.py": body for n in range(400)})
+    started = time.time()
+    result = check.run(str(tmp_path))
+    assert result.files == 400 and not result.issues
+    assert time.time() - started < 10, "400 files of ordinary code should take about a second"

@@ -348,6 +348,11 @@ def _cmd_fragile(args) -> int:
 def _cmd_keygen(args) -> int:
     public = seal_mod.keygen(args.output)
     print(f"private seed written to {args.output} (keep it out of the repo)")
+    from .custody import backend
+
+    if backend() == "pure-python":
+        print('signing will use the built-in pure-Python code, which is not constant-time. `pip install "patient-zero[sign]"` '
+              "switches to OpenSSL.")
     print(f"public key: {public}")
     return EXIT_OK
 

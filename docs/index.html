@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'">
+<meta name="description" content="Open source checks for AI apps that touch patient data: a zero-setup scan, a safeguard profile, and signed evidence a buyer can verify in a browser.">
+<title>patient-zero</title>
+<style>
+  :root { --bg:#f7f6f2; --card:#fff; --ink:#1d2228; --soft:#5b646e; --line:#dcd9d0; --accent:#2d4f7c; --code:#efede6; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#15181c; --card:#1e2227; --ink:#e8e6e1; --soft:#a2a9b1; --line:#343a42; --accent:#9dbdea; --code:#262b31; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:780px; margin:0 auto; padding:48px 16px 72px; }
+  h1 { font-size:2.2rem; line-height:1.15; margin:0 0 6px; letter-spacing:-0.01em; }
+  h2 { font-size:1.15rem; margin:36px 0 8px; }
+  p { margin:0 0 14px; }
+  .lead { font-size:1.15rem; color:var(--soft); }
+  pre { background:var(--code); border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto; font:0.9rem ui-monospace, Menlo, Consolas, monospace; margin:0 0 14px; }
+  code { font:0.9em ui-monospace, Menlo, Consolas, monospace; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin:8px 0 6px; }
+  .card { display:block; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; color:inherit; text-decoration:none; }
+  .card:hover, .card:focus-visible { border-color:var(--accent); outline:none; }
+  .card b { display:block; margin-bottom:4px; color:var(--accent); }
+  .card span { color:var(--soft); font-size:0.95rem; }
+  img { max-width:100%; border:1px solid var(--line); border-radius:8px; }
+  a { color:var(--accent); }
+  ul { padding-left:20px; margin:0 0 14px; }
+  footer { margin-top:40px; color:var(--soft); font-size:0.95rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>patient-zero</h1>
+  <p class="lead">Open source checks for AI apps that touch patient data. It tells you what to fix, shows a buyer exactly what was tested, and never calls anything "compliant".</p>
+
+  <pre>pip install git+https://github.com/joeyvictorino/patient-zero
+pz check .          # read your project, list what to fix first
+pz demo             # watch it investigate a deliberately broken clinic app</pre>
+
+  <div class="cards">
+    <a class="card" href="verify/"><b>Try the verifier</b><span>Runs in this browser. Click "Try a sample" to see a signed report checked, and one that was edited get caught.</span></a>
+    <a class="card" href="https://github.com/joeyvictorino/patient-zero"><b>Source on GitHub</b><span>MIT licensed. Python, standard library plus PyYAML.</span></a>
+    <a class="card" href="https://github.com/joeyvictorino/patient-zero/tree/main/known-gaps/things-that-do-not-work"><b>What does not work</b><span>Every known limit is a file in the repository.</span></a>
+  </div>
+
+  <h2>What <code>pz check</code> says about a typical first draft</h2>
+  <p><img src="check.gif" alt="Terminal recording: pz check lists a model called from the browser, a key exposed to visitors and a committed .env file, each with why it matters and a fix" width="1180" height="760"></p>
+
+  <h2>Three ways in</h2>
+  <ul>
+    <li><b>You are building a health app</b>, often with an AI coding tool. <code>pz check .</code> needs no setup. It also runs as an MCP server, a Claude Code skill, a GitHub Action and a pre-commit hook.</li>
+    <li><b>You sell to clinics.</b> Seal what you tested, have an assessor co-sign, and send one file. The badge states counts and links to the evidence.</li>
+    <li><b>You are deciding on a vendor.</b> Send them <a href="https://github.com/joeyvictorino/patient-zero/blob/main/docs/VENDOR-QUESTIONNAIRE.md">the questions</a>, and check what they send back in <a href="verify/">the verifier</a>.</li>
+  </ul>
+
+  <h2>What it is not</h2>
+  <p>Not a HIPAA certification: none exists. Not a pentest, and not a code review. A clean result is weak evidence, and the score says so. It is new, has one author, and has been tested against its own demo and sample apps, not yet a real product in a real clinic.</p>
+
+  <footer>patient-zero is a draft, version 0.1. <a href="https://github.com/joeyvictorino/patient-zero/blob/main/spec/SPEC.md">Specification</a> · <a href="https://github.com/joeyvictorino/patient-zero/blob/main/ROADMAP.md">Roadmap</a> · <a href="https://github.com/joeyvictorino/patient-zero/blob/main/docs/FAQ.md">Questions people ask</a></footer>
+</main>
+</body>
+</html>

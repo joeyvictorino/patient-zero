@@ -16,6 +16,10 @@ Changes to the standard (profile, spec, vectors) are marked **standard**.
 - `pz calibration --export` and `--pool`, and `calibration-data/`.
 - `GOVERNANCE.md`, `MAINTAINERS.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `TRADEMARK.md`, `ROADMAP.md`.
 - **standard** CONSENT family (eight controls) and Nevada item NV-6. Profile is 51 controls.
+- `examples/vibe-clinic`, a sample app that is wrong on purpose, and `docs/check.gif`.
+- Signing uses the `cryptography` package when installed (`patient-zero[sign]`); the pure Python signer is the fallback.
+- `pz check` skips files that contain none of a rule's `hints`, which makes it about seven times faster, and hands the stack and row level security probes the same file list it uses, so excluded and test files stay out of them.
+- "Try a sample" on the verify page, a landing page at `docs/index.html`, `docs/FAQ.md`, a PyPI release workflow, and a CI step that builds the package and runs a clean install.
 - Target files must list `authorized_hosts`. Existing target files need the new field.
 
 ## 0.1.0

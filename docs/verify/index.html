@@ -52,6 +52,7 @@
     <span class="lead">or click to choose. A single bundle file works best. You can also choose <code>seal.json</code> together with its evidence files, or <code>proof.json</code> with the one file it proves.</span>
     <input id="pick" type="file" multiple hidden>
   </div>
+  <p class="lead" style="margin-top:10px">Nothing to drop yet? <button id="sampleGood">Try a sample</button> <button id="sampleEdited">Try a sample that was edited after signing</button></p>
 
   <div class="card">
     <label for="expect"><strong>Optional:</strong> the vendor's public key, if they gave it to you some other way (their website, a contract)</label>
@@ -84,6 +85,7 @@
   </footer>
 </main>
 <script src="verify.js"></script>
+<script src="samples.js"></script>
 <script src="page.js"></script>
 </body>
 </html>

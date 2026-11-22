@@ -4,11 +4,14 @@
 #
 # files:    code | config | any       which files the pattern is tried on
 # pattern:  a regular expression tried on each line (case-insensitive unless case: true)
+# hints:    lowercase text, at least one of which every match contains. A file with none of them is skipped
+#           without running the pattern, which is what keeps the check fast. Leave it out and the rule still works.
 # control:  the profile control the mistake speaks to
 # title / why / fix: plain language, written for someone who is not a security engineer
 
 line_rules:
   - id: browser-model-key
+    hints: ["public_", "vite_", "react_app_", "gatsby_"]
     files: any
     case: true
     pattern: '\b(?:NEXT_PUBLIC|VITE|REACT_APP|EXPO_PUBLIC|PUBLIC|NUXT_PUBLIC|GATSBY)_[A-Z0-9_]*(?:SECRET|SERVICE_ROLE|PRIVATE_KEY|OPENAI|ANTHROPIC|GEMINI|GROQ|MISTRAL|COHERE|OPENROUTER)[A-Z0-9_]*'
@@ -19,6 +22,7 @@ line_rules:
     fix: Rename the variable without the public prefix, call the model or database from your server only, and replace the key, because it may already have been copied.
 
   - id: browser-model-call
+    hints: ["dangerouslyallowbrowser"]
     files: code
     pattern: 'dangerouslyAllowBrowser\s*:\s*true'
     severity: critical
@@ -28,6 +32,7 @@ line_rules:
     fix: Move the model call to a server route. The browser talks to your server; your server talks to the model.
 
   - id: tls-checks-off
+    hints: ["verify", "rejectunauthorized", "node_tls_reject_unauthorized"]
     files: code
     pattern: 'verify\s*=\s*False|rejectUnauthorized\s*:\s*false|NODE_TLS_REJECT_UNAUTHORIZED[''"\]\s]*=\s*[''"]?0|InsecureSkipVerify\s*:\s*true|CURLOPT_SSL_VERIFYPEER\s*,\s*(?:false|0)'
     severity: high
@@ -37,6 +42,7 @@ line_rules:
     fix: Remove the setting. If a certificate fails to verify, fix the certificate.
 
   - id: cors-wildcard
+    hints: ["origin", "cors("]
     files: code
     pattern: 'allow_origins\s*=\s*\[\s*[''"]\*[''"]|Access-Control-Allow-Origin[''"]?\s*[:,]\s*[''"]\*[''"]|\borigin\s*:\s*[''"]\*[''"]|\bcors\(\s*\)'
     severity: medium
@@ -46,6 +52,7 @@ line_rules:
     fix: List the exact web addresses that should be allowed to call the API.
 
   - id: tracker-session-replay
+    hints: ["hotjar", "fullstory", "logrocket", "clarity.ms", "connect.facebook.net", "fbq(", "posthog", "smartlook", "mouseflow"]
     files: code
     pattern: 'hotjar|fullstory|logrocket|clarity\.ms|connect\.facebook\.net|\bfbq\(|posthog|smartlook|mouseflow'
     severity: high
@@ -55,6 +62,7 @@ line_rules:
     fix: Remove it from every page a patient or staff member uses once signed in, or get a signed Business Associate Agreement from that company and add it to your register.
 
   - id: tracker-analytics
+    hints: ["googletagmanager", "google-analytics", "gtag(", "mixpanel", "amplitude", "@segment/", "analytics.js", "@datadog/browser-rum", "@vercel/analytics", "plausible.io"]
     files: code
     pattern: 'googletagmanager|google-analytics|\bgtag\(|mixpanel|amplitude|@segment/|analytics\.js|@datadog/browser-rum|@vercel/analytics|plausible\.io'
     severity: medium
@@ -64,6 +72,7 @@ line_rules:
     fix: Keep it off signed-in and appointment pages, or get a signed Business Associate Agreement and add the company to your register.
 
   - id: error-reporting
+    hints: ["sentry", "bugsnag", "rollbar"]
     files: code
     pattern: '@sentry/|sentry_sdk|sentry\.init|bugsnag|rollbar'
     severity: low
@@ -73,6 +82,7 @@ line_rules:
     fix: Turn off personal data in the reports (for example send_default_pii off, request bodies off), or get a signed Business Associate Agreement.
 
   - id: browser-storage
+    hints: ["localstorage", "sessionstorage"]
     files: code
     pattern: '(?:localStorage|sessionStorage)\.setItem\([^)]*(?:patient|diagnos|clinical|note|record|token|jwt)'
     severity: medium
@@ -82,6 +92,7 @@ line_rules:
     fix: Keep sessions in a secure, HTTP-only cookie that expires, and keep patient data on the server.
 
   - id: audio-capture
+    hints: ["getusermedia", "mediarecorder", "audio.transcriptions", "deepgram", "assemblyai", "speech_recognition", "speechrecognition", "whisper"]
     files: code
     pattern: 'getUserMedia|MediaRecorder|audio\.transcriptions|deepgram|assemblyai|speech_recognition|SpeechRecognition|whisper'
     severity: medium
@@ -93,6 +104,7 @@ line_rules:
 # Lines that write to a log and mention something that sounds like patient data.
 log_rule:
   id: patient-data-in-logs
+  hints: ["patient", "ssn", "dob", "birth", "diagnos", "mrn", "medical", "prescription", "medication", "insurance", "clinical", "note", "transcript", "symptom", "chart"]
   call: '(?:console\.(?:log|info|debug|warn|error)|\bprint|\blogg?(?:er|ing)?\.(?:debug|info|warn|warning|error|exception|log)|\bfmt\.Print\w*|\blog\.Print\w*)\s*\('
   words: '\b(?:patient|ssn|dob|date_?of_?birth|birth_?date|diagnos\w*|mrn|medical_?record|prescription|medication|insurance|clinical_?note|note_?text|transcript|symptom\w*|chart)\b'
   severity: medium
@@ -103,14 +115,14 @@ log_rule:
 
 # Secrets written into files. The matched text is never printed, only its first characters.
 secret_rules:
-  - {id: anthropic-key, pattern: 'sk-ant-[A-Za-z0-9_\-]{20,}', what: an Anthropic API key}
-  - {id: openai-key, pattern: 'sk-(?:proj-|svcacct-)?[A-Za-z0-9_\-]{32,}', what: a model API key}
-  - {id: aws-key, pattern: '\bAKIA[0-9A-Z]{16}\b', what: an AWS access key}
-  - {id: google-key, pattern: '\bAIza[0-9A-Za-z_\-]{35}\b', what: a Google API key}
-  - {id: github-token, pattern: '\bgh[pousr]_[A-Za-z0-9]{36,}\b', what: a GitHub token}
-  - {id: slack-token, pattern: '\bxox[abpr]-[A-Za-z0-9\-]{10,}', what: a Slack token}
-  - {id: stripe-key, pattern: '\b[sr]k_live_[0-9a-zA-Z]{24,}', what: a live Stripe key}
-  - {id: private-key, pattern: '-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY', what: a private key}
+  - {id: anthropic-key, hint: "sk-ant-", pattern: 'sk-ant-[A-Za-z0-9_\-]{20,}', what: an Anthropic API key}
+  - {id: openai-key, hint: "sk-", pattern: 'sk-(?:proj-|svcacct-)?[A-Za-z0-9_\-]{32,}', what: a model API key}
+  - {id: aws-key, hint: "AKIA", pattern: '\bAKIA[0-9A-Z]{16}\b', what: an AWS access key}
+  - {id: google-key, hint: "AIza", pattern: '\bAIza[0-9A-Za-z_\-]{35}\b', what: a Google API key}
+  - {id: github-token, hint: "gh", pattern: '\bgh[pousr]_[A-Za-z0-9]{36,}\b', what: a GitHub token}
+  - {id: slack-token, hint: "xox", pattern: '\bxox[abpr]-[A-Za-z0-9\-]{10,}', what: a Slack token}
+  - {id: stripe-key, hint: "k_live_", pattern: '\b[sr]k_live_[0-9a-zA-Z]{24,}', what: a live Stripe key}
+  - {id: private-key, hint: "PRIVATE KEY", pattern: '-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY', what: a private key}
 secret:
   severity: critical
   control: BASE-2
@@ -132,22 +144,22 @@ env_file:
 
 # Companies that receive whatever the app sends to its AI model. `pattern` finds the SDK or the host in code.
 providers:
-  - {name: OpenAI, host: api.openai.com, pattern: 'api\.openai\.com|from\s+openai\b|import\s+openai\b|[''"]openai[''"]|@ai-sdk/openai|langchain_openai'}
-  - {name: Anthropic, host: api.anthropic.com, pattern: 'api\.anthropic\.com|from\s+anthropic\b|import\s+anthropic\b|@anthropic-ai/sdk|@ai-sdk/anthropic|langchain_anthropic'}
-  - {name: Google Gemini, host: generativelanguage.googleapis.com, pattern: 'generativelanguage\.googleapis\.com|google\.generativeai|@google/generative-ai|@google/genai|google\.genai|@ai-sdk/google'}
-  - {name: Groq, host: api.groq.com, pattern: 'api\.groq\.com|groq-sdk|from\s+groq\b|import\s+groq\b'}
-  - {name: Mistral, host: api.mistral.ai, pattern: 'api\.mistral\.ai|@mistralai/|from\s+mistralai\b'}
-  - {name: Cohere, host: api.cohere.com, pattern: 'api\.cohere\.(?:com|ai)|cohere-ai|from\s+cohere\b|import\s+cohere\b'}
-  - {name: Together AI, host: api.together.xyz, pattern: 'api\.together\.(?:xyz|ai)|together-ai|from\s+together\b'}
-  - {name: OpenRouter, host: openrouter.ai, pattern: 'openrouter\.ai|@openrouter/'}
-  - {name: DeepSeek, host: api.deepseek.com, pattern: 'api\.deepseek\.com'}
-  - {name: xAI, host: api.x.ai, pattern: 'api\.x\.ai'}
-  - {name: Perplexity, host: api.perplexity.ai, pattern: 'api\.perplexity\.ai'}
-  - {name: Replicate, host: api.replicate.com, pattern: 'api\.replicate\.com|from\s+replicate\b|import\s+replicate\b|[''"]replicate[''"]'}
-  - {name: Hugging Face Inference, host: api-inference.huggingface.co, pattern: 'api-inference\.huggingface\.co|@huggingface/inference|InferenceClient'}
-  - {name: ElevenLabs, host: api.elevenlabs.io, pattern: 'api\.elevenlabs\.io|elevenlabs'}
-  - {name: Deepgram, host: api.deepgram.com, pattern: 'api\.deepgram\.com|@deepgram/sdk'}
-  - {name: AssemblyAI, host: api.assemblyai.com, pattern: 'api\.assemblyai\.com|assemblyai'}
+  - {name: OpenAI, hints: ["openai"], host: api.openai.com, pattern: 'api\.openai\.com|from\s+openai\b|import\s+openai\b|[''"]openai[''"]|@ai-sdk/openai|langchain_openai'}
+  - {name: Anthropic, hints: ["anthropic"], host: api.anthropic.com, pattern: 'api\.anthropic\.com|from\s+anthropic\b|import\s+anthropic\b|@anthropic-ai/sdk|@ai-sdk/anthropic|langchain_anthropic'}
+  - {name: Google Gemini, hints: ["generativelanguage", "generativeai", "generative-ai", "genai", "@ai-sdk/google"], host: generativelanguage.googleapis.com, pattern: 'generativelanguage\.googleapis\.com|google\.generativeai|@google/generative-ai|@google/genai|google\.genai|@ai-sdk/google'}
+  - {name: Groq, hints: ["groq"], host: api.groq.com, pattern: 'api\.groq\.com|groq-sdk|from\s+groq\b|import\s+groq\b'}
+  - {name: Mistral, hints: ["mistral"], host: api.mistral.ai, pattern: 'api\.mistral\.ai|@mistralai/|from\s+mistralai\b'}
+  - {name: Cohere, hints: ["cohere"], host: api.cohere.com, pattern: 'api\.cohere\.(?:com|ai)|cohere-ai|from\s+cohere\b|import\s+cohere\b'}
+  - {name: Together AI, hints: ["together"], host: api.together.xyz, pattern: 'api\.together\.(?:xyz|ai)|together-ai|from\s+together\b'}
+  - {name: OpenRouter, hints: ["openrouter"], host: openrouter.ai, pattern: 'openrouter\.ai|@openrouter/'}
+  - {name: DeepSeek, hints: ["deepseek"], host: api.deepseek.com, pattern: 'api\.deepseek\.com'}
+  - {name: xAI, hints: ["api.x.ai"], host: api.x.ai, pattern: 'api\.x\.ai'}
+  - {name: Perplexity, hints: ["perplexity"], host: api.perplexity.ai, pattern: 'api\.perplexity\.ai'}
+  - {name: Replicate, hints: ["replicate"], host: api.replicate.com, pattern: 'api\.replicate\.com|from\s+replicate\b|import\s+replicate\b|[''"]replicate[''"]'}
+  - {name: Hugging Face Inference, hints: ["huggingface", "inferenceclient"], host: api-inference.huggingface.co, pattern: 'api-inference\.huggingface\.co|@huggingface/inference|InferenceClient'}
+  - {name: ElevenLabs, hints: ["elevenlabs"], host: api.elevenlabs.io, pattern: 'api\.elevenlabs\.io|elevenlabs'}
+  - {name: Deepgram, hints: ["deepgram"], host: api.deepgram.com, pattern: 'api\.deepgram\.com|@deepgram/sdk'}
+  - {name: AssemblyAI, hints: ["assemblyai"], host: api.assemblyai.com, pattern: 'api\.assemblyai\.com|assemblyai'}
 provider:
   control: TRUST-1
   unlisted:

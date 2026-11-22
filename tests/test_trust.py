@@ -169,7 +169,10 @@ def test_vectors_are_what_the_generator_writes(tmp_path):
     before = {name: open(os.path.join(ROOT, "patient_zero", "data", "vectors", name)).read()
               for name in os.listdir(os.path.join(ROOT, "patient_zero", "data", "vectors"))}
     assert set(before) == {f"{kind}.json" for kind in conformance.KINDS}
-    subprocess.run([sys.executable, os.path.join(ROOT, "tools", "make_vectors.py")], check=True, capture_output=True)
+    samples = open(os.path.join(ROOT, "docs", "verify", "samples.js")).read()
+    env = {**os.environ, "PYTHONPATH": ROOT + os.pathsep + os.environ.get("PYTHONPATH", "")}
+    subprocess.run([sys.executable, os.path.join(ROOT, "tools", "make_vectors.py")], check=True, capture_output=True, env=env)
+    assert open(os.path.join(ROOT, "docs", "verify", "samples.js")).read() == samples
     after = {name: open(os.path.join(ROOT, "patient_zero", "data", "vectors", name)).read() for name in before}
     assert after == before, "run tools/make_vectors.py and review the diff; a changed vector is a change to the standard"
 
@@ -235,3 +238,16 @@ def test_calibration_export_drops_names_and_pools(tmp_path, capsys):
     capsys.readouterr()
     assert main(["calibration", "--pool", str(pool)]) == 0
     assert "Fewer than 100 settled predictions" in capsys.readouterr().out
+
+
+# --- signing backend ----------------------------------------------------------
+
+def test_audited_and_pure_python_signers_agree():
+    from patient_zero.custody import backend, generate_keypair, sign, verify
+
+    pytest.importorskip("cryptography")
+    assert backend() == "cryptography"
+    for seed_text, message in ((b"a", b""), (b"b", b"patient-zero"), (b"c", bytes(range(256)) * 9)):
+        seed, public = generate_keypair(seed_text)
+        assert sign(message, seed) == sign(message, seed, pure=True)
+        assert verify(message, sign(message, seed), public)

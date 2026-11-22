@@ -14,7 +14,7 @@ from __future__ import annotations
 import glob
 import os
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .common import ProbeRefused, ProbeResult
 
@@ -41,8 +41,9 @@ def sql_files(path: str) -> List[str]:
     return sorted(glob.glob(os.path.join(path, "**", "*.sql"), recursive=True))
 
 
-def run(path: str) -> ProbeResult:
-    files = sql_files(path)
+def run(path: str, files: Optional[List[str]] = None) -> ProbeResult:
+    """Read every .sql file under path, or exactly the files given (for a caller that already chose which files count)."""
+    files = sorted(files) if files is not None else sql_files(path)
     if not files:
         raise ProbeRefused(f"no .sql files found at {path}")
     tables: Dict[str, bool] = {}          # table -> row level security enabled

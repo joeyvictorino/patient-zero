@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_ORIGINS=*

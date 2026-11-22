@@ -2,14 +2,21 @@
 
 Every AI app that touches PHI is patient zero. We run the outbreak investigation.
 
-An open safeguard profile for AI apps that handle protected health information, shipped as code: 51 testable controls, drop-in reference safeguards, nine probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence you can disclose one file at a time.
+Open source checks for AI apps that handle protected health information (PHI). It tells you what to fix, shows a buyer exactly what was tested, and never calls anything "compliant".
 
 ```
 pip install git+https://github.com/joeyvictorino/patient-zero
-pz demo
+
+pz check .                       # read your project and list what to fix first
+pz check examples/vibe-clinic    # or see it on a sample app with the usual mistakes
+pz demo                          # watch it investigate a deliberately broken clinic app, patch it, and investigate again
 ```
 
-`pz demo` starts a deliberately broken AI app on localhost, investigates it, patches it, and investigates again. It needs no network, no account and no API key.
+Nothing here needs a network, an account or an API key. With [uv](https://docs.astral.sh/uv/) there is nothing to install: `uvx --from git+https://github.com/joeyvictorino/patient-zero pz check .`
+
+![pz check on a sample app](docs/check.gif)
+
+Underneath the check is an open safeguard profile shipped as code: 51 testable controls, drop-in reference safeguards, nine probes, a Bayesian readiness score that refuses to pretend a green tick is certainty, and signed evidence a buyer can verify in a browser. Questions people ask, including "isn't this just regexes?" and "why did you write your own Ed25519?", are answered in the [FAQ](docs/FAQ.md).
 
 Three ways in, depending on who you are:
 
@@ -19,7 +26,7 @@ Three ways in, depending on who you are:
 | A vendor who has to show a clinic what you tested | [Seal it, bundle it, badge it](#show-a-customer-what-you-tested) |
 | A clinic or health system deciding on a vendor | [Verify what they sent you](#if-you-buy-ai-tools-rather-than-build-them), in a browser |
 
-The short version, in plain language (`pz demo --brief`):
+The demo's short version, in plain language (`pz demo --brief`):
 
 ![pz demo --brief](docs/demo.gif)
 
@@ -242,7 +249,7 @@ pz verify-proof proof.json evidence/pentest.json --public-key <yours>
 
 A customer asks for your pentest evidence. You send that one file and `proof.json`. They can check it belongs to your signed assessment without seeing any other file, or even the other file names. Each new seal records the root of the one before it, so reassessments form a chain.
 
-The Merkle tree and the Ed25519 implementation are standard library only, checked against the RFC 8032 test vectors. A key you generated proves the same key signed each seal, not who holds it. `--domain` and `pz identity` tie it to a website you control, and `pz cosign` lets an assessor, a customer or counsel add their own signature. That is as strong as control of the domain, and [no stronger](known-gaps/things-that-do-not-work/20261111-self-generated-keys-prove-continuity-not-identity.md).
+The Merkle tree and the Ed25519 implementation are standard library only, checked against the RFC 8032 test vectors. Signing uses the audited `cryptography` package instead whenever it is installed (`pip install "patient-zero[sign]"`); both give the same bytes. A key you generated proves the same key signed each seal, not who holds it. `--domain` and `pz identity` tie it to a website you control, and `pz cosign` lets an assessor, a customer or counsel add their own signature. That is as strong as control of the domain, and [no stronger](known-gaps/things-that-do-not-work/20261111-self-generated-keys-prove-continuity-not-identity.md).
 
 ## A standard, not just a tool
 

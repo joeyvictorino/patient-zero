@@ -18,5 +18,11 @@ jobs:
       - run: pz controls --validate
       - run: pz demo
       - run: pz conformance
+      - name: The package builds and a clean install runs
+        run: |
+          pip install build
+          python -m build -o dist .
+          python -m venv /tmp/clean && /tmp/clean/bin/pip install -q dist/*.whl
+          cd /tmp && /tmp/clean/bin/pz conformance && /tmp/clean/bin/pz demo --brief
       - run: node tools/run_vectors.js
-      - run: pz check . --fail-on high
+      - run: pz check . --fail-on high --exclude "examples/vibe-clinic/*"
