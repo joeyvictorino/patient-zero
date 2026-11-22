@@ -54,7 +54,7 @@ line_rules:
   - id: tracker-session-replay
     hints: ["hotjar", "fullstory", "logrocket", "clarity.ms", "connect.facebook.net", "fbq(", "posthog", "smartlook", "mouseflow"]
     files: code
-    pattern: 'hotjar|fullstory|logrocket|clarity\.ms|connect\.facebook\.net|\bfbq\(|posthog|smartlook|mouseflow'
+    pattern: 'hotjar|fullstory|logrocket|clarity\.ms|connect\.facebook\.net|\bfbq\(|smartlook|mouseflow|posthog[^\n]{0,80}session_?recording|session_?recording[^\n]{0,80}posthog'
     severity: high
     control: TRUST-2
     title: A session recording or advertising tracker runs in this app
@@ -62,9 +62,9 @@ line_rules:
     fix: Remove it from every page a patient or staff member uses once signed in, or get a signed Business Associate Agreement from that company and add it to your register.
 
   - id: tracker-analytics
-    hints: ["googletagmanager", "google-analytics", "gtag(", "mixpanel", "amplitude", "@segment/", "analytics.js", "@datadog/browser-rum", "@vercel/analytics", "plausible.io"]
+    hints: ["googletagmanager", "google-analytics", "gtag(", "posthog", "mixpanel", "amplitude", "@segment/", "analytics.js", "@datadog/browser-rum", "@vercel/analytics", "plausible.io"]
     files: code
-    pattern: 'googletagmanager|google-analytics|\bgtag\(|mixpanel|amplitude|@segment/|analytics\.js|@datadog/browser-rum|@vercel/analytics|plausible\.io'
+    pattern: 'googletagmanager|google-analytics|\bgtag\(|\bposthog\b|\bmixpanel\b|@amplitude/|amplitude-js|\bamplitude\.(?:init|track|getInstance)|@segment/|analytics\.js\b(?!on)|@datadog/browser-rum|@vercel/analytics|plausible\.io'
     severity: medium
     control: TRUST-2
     title: A third-party analytics tool runs in this app
@@ -74,7 +74,7 @@ line_rules:
   - id: error-reporting
     hints: ["sentry", "bugsnag", "rollbar"]
     files: code
-    pattern: '@sentry/|sentry_sdk|sentry\.init|bugsnag|rollbar'
+    pattern: '@sentry/|sentry_sdk|sentry\.init|\bbugsnag\b|\brollbar\b'
     severity: low
     control: TRUST-2
     title: An error reporting service is in use
@@ -92,9 +92,9 @@ line_rules:
     fix: Keep sessions in a secure, HTTP-only cookie that expires, and keep patient data on the server.
 
   - id: audio-capture
-    hints: ["getusermedia", "mediarecorder", "audio.transcriptions", "deepgram", "assemblyai", "speech_recognition", "speechrecognition", "whisper"]
+    hints: ["getusermedia", "mediarecorder", "audio.transcriptions", "speech_recognition", "speechrecognition", ".transcribe("]
     files: code
-    pattern: 'getUserMedia|MediaRecorder|audio\.transcriptions|deepgram|assemblyai|speech_recognition|SpeechRecognition|whisper'
+    pattern: 'getUserMedia|MediaRecorder|audio\.transcriptions|\bspeech_recognition\b|\bSpeechRecognition\b|\.transcribe\('
     severity: medium
     control: CONSENT-2
     title: This app records or transcribes audio
@@ -115,8 +115,8 @@ log_rule:
 
 # Secrets written into files. The matched text is never printed, only its first characters.
 secret_rules:
-  - {id: anthropic-key, hint: "sk-ant-", pattern: 'sk-ant-[A-Za-z0-9_\-]{20,}', what: an Anthropic API key}
-  - {id: openai-key, hint: "sk-", pattern: 'sk-(?:proj-|svcacct-)?[A-Za-z0-9_\-]{32,}', what: a model API key}
+  - {id: anthropic-key, hint: "sk-ant-", pattern: '(?<![A-Za-z0-9_\-])sk-ant-[A-Za-z0-9_\-]{20,}', what: an Anthropic API key}
+  - {id: openai-key, hint: "sk-", pattern: '(?<![A-Za-z0-9_\-])sk-(?:proj-|svcacct-)?(?=[A-Za-z0-9_\-]*[0-9])[A-Za-z0-9_\-]{32,}', what: a model API key}
   - {id: aws-key, hint: "AKIA", pattern: '\bAKIA[0-9A-Z]{16}\b', what: an AWS access key}
   - {id: google-key, hint: "AIza", pattern: '\bAIza[0-9A-Za-z_\-]{35}\b', what: a Google API key}
   - {id: github-token, hint: "gh", pattern: '\bgh[pousr]_[A-Za-z0-9]{36,}\b', what: a GitHub token}
@@ -144,7 +144,7 @@ env_file:
 
 # Companies that receive whatever the app sends to its AI model. `pattern` finds the SDK or the host in code.
 providers:
-  - {name: OpenAI, hints: ["openai"], host: api.openai.com, pattern: 'api\.openai\.com|from\s+openai\b|import\s+openai\b|[''"]openai[''"]|@ai-sdk/openai|langchain_openai'}
+  - {name: OpenAI, hints: ["openai"], host: api.openai.com, pattern: 'api\.openai\.com|from\s+openai\b|import\s+openai\b|from\s+[''"]openai[''"]|require\([''"]openai[''"]\)|@ai-sdk/openai|langchain_openai'}
   - {name: Anthropic, hints: ["anthropic"], host: api.anthropic.com, pattern: 'api\.anthropic\.com|from\s+anthropic\b|import\s+anthropic\b|@anthropic-ai/sdk|@ai-sdk/anthropic|langchain_anthropic'}
   - {name: Google Gemini, hints: ["generativelanguage", "generativeai", "generative-ai", "genai", "@ai-sdk/google"], host: generativelanguage.googleapis.com, pattern: 'generativelanguage\.googleapis\.com|google\.generativeai|@google/generative-ai|@google/genai|google\.genai|@ai-sdk/google'}
   - {name: Groq, hints: ["groq"], host: api.groq.com, pattern: 'api\.groq\.com|groq-sdk|from\s+groq\b|import\s+groq\b'}
@@ -155,11 +155,11 @@ providers:
   - {name: DeepSeek, hints: ["deepseek"], host: api.deepseek.com, pattern: 'api\.deepseek\.com'}
   - {name: xAI, hints: ["api.x.ai"], host: api.x.ai, pattern: 'api\.x\.ai'}
   - {name: Perplexity, hints: ["perplexity"], host: api.perplexity.ai, pattern: 'api\.perplexity\.ai'}
-  - {name: Replicate, hints: ["replicate"], host: api.replicate.com, pattern: 'api\.replicate\.com|from\s+replicate\b|import\s+replicate\b|[''"]replicate[''"]'}
+  - {name: Replicate, hints: ["replicate"], host: api.replicate.com, pattern: 'api\.replicate\.com|from\s+replicate\b|import\s+replicate\b|from\s+[''"]replicate[''"]|require\([''"]replicate[''"]\)'}
   - {name: Hugging Face Inference, hints: ["huggingface", "inferenceclient"], host: api-inference.huggingface.co, pattern: 'api-inference\.huggingface\.co|@huggingface/inference|InferenceClient'}
-  - {name: ElevenLabs, hints: ["elevenlabs"], host: api.elevenlabs.io, pattern: 'api\.elevenlabs\.io|elevenlabs'}
+  - {name: ElevenLabs, hints: ["elevenlabs"], host: api.elevenlabs.io, pattern: 'api\.elevenlabs\.io|from\s+elevenlabs\b|import\s+elevenlabs\b|@elevenlabs/|elevenlabs-js'}
   - {name: Deepgram, hints: ["deepgram"], host: api.deepgram.com, pattern: 'api\.deepgram\.com|@deepgram/sdk'}
-  - {name: AssemblyAI, hints: ["assemblyai"], host: api.assemblyai.com, pattern: 'api\.assemblyai\.com|assemblyai'}
+  - {name: AssemblyAI, hints: ["assemblyai"], host: api.assemblyai.com, pattern: 'api\.assemblyai\.com|import\s+assemblyai\b|from\s+assemblyai\b|[''"]assemblyai[''"]'}
 provider:
   control: TRUST-1
   unlisted:

@@ -51,7 +51,7 @@ def test_check_finds_the_common_mistakes_and_never_prints_a_secret(vibe):
     result = check.run(vibe)
     assert rules_of(result) >= {
         "browser-model-key", "browser-model-call", "secret-openai-key", "secret-supabase-service-role", "env-file-committed",
-        "model-provider-unlisted", "tracker-session-replay", "tracker-analytics", "audio-capture", "cors-wildcard",
+        "model-provider-unlisted", "tracker-analytics", "audio-capture", "cors-wildcard",
         "tls-checks-off", "patient-data-in-logs", "rls-probe", "stack-probe",
     }
     assert result.failed("high") and result.worst() == "critical"
@@ -239,3 +239,32 @@ def test_log_rule_looks_at_what_is_interpolated_not_at_the_words_in_the_message(
                             "b.ts": "console.log(`loaded ${records.length} rows for the patient list`);\nconsole.log(`dx: ${diagnosis}`);\n"})
     hits = sorted((i.file, i.line) for i in check.run(root).issues if i.rule == "patient-data-in-logs")
     assert hits == [("a.py", 3), ("b.ts", 2)]
+
+
+def test_false_positives_found_on_real_packages_stay_fixed(tmp_path):
+    """Each line here was flagged when the check was first run on public packages. None is a real finding."""
+    root = write(tmp_path, {
+        "ui.py": "add_scrollbars=False\n"                                             # contains "rollbar"
+                 'path = home / "analytics.jsonl"\n'                                   # not analytics.js
+                 'dirname = "Flask-AppBuilder-Skeleton-AddOn-master"\n'                # "sk-" in the middle of a word
+                 '"replicate": replicate_models,\n'                                    # a dictionary key, not an import
+                 "# requests.get(url, verify=False)  left here as a warning\n"         # commented out
+                 "// posthog.init('x')\n",
+        "docs.json": '{"text": "My AWS secret key is AKIAIOSFODNN7EXAMPLE"}\n'         # the documented example key
+                     '{"placeholder": "-----BEGIN RSA PRIVATE KEY-----\\n...\\n-----END RSA PRIVATE KEY-----"}\n',
+        "db/1.sql": "-- create table if needed by hand\ncreate table if not exists notes (id int);\n"
+                    "alter table notes enable row level security;\n",
+    })
+    assert [f"{i.rule} {i.file}:{i.line} {i.detail}" for i in check.run(root).issues] == []
+
+
+def test_one_finding_per_rule_per_file_says_how_many_more(tmp_path):
+    root = write(tmp_path, {"a.js": "mixpanel.track('a')\nmixpanel.track('b')\nmixpanel.track('c')\n", "b.js": "mixpanel.init('k')\n"})
+    found = [i for i in check.run(root).issues if i.rule == "tracker-analytics"]
+    assert [(i.file, i.line, i.more) for i in found] == [("a.js", 1, 2), ("b.js", 1, 0)]
+    assert "and 2 more line(s) in this file" in check.render_text(check.run(root))
+
+
+def test_a_real_key_in_a_comment_is_still_reported(tmp_path):
+    root = write(tmp_path, {"a.py": f"# old key: {FAKE_KEY}\n"})
+    assert rules_of(check.run(root)) == {"secret-openai-key"}

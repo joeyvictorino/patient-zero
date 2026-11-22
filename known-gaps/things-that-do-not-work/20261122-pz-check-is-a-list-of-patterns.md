@@ -10,6 +10,6 @@ Gap-Class: weak
 - It cannot see access control at all. Whether one clinic can read another's records is the commonest serious flaw, and only the isolation probe against a running copy tests it.
 - The provider and tracker lists were written from the author's knowledge in November 2026 and will age.
 - The model-provider finding does not know which providers will sign a Business Associate Agreement, or on which plans.
-- It has been run against small sample projects and this repository, not against a body of real applications. Its false positive and false negative rates are unknown.
+- On 2026-11-22 it was run on 13 public packages (8,742 files); `docs/FIELD-NOTES.md` has what it got wrong and what was fixed. That measured false alarms on libraries. Its miss rate is still unknown, and it has not been run on real health applications.
 
 What would close this: a corpus of real, consenting projects with known flaws to measure against; parsing for the two or three languages that matter most; and rules contributed by people who review these apps for a living.

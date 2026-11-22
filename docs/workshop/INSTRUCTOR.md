@@ -19,7 +19,7 @@
 A reasonable set of fixes:
 
 - `src/lib/ai.ts`: move the model call to a server route; read the key from a server-only variable; remove `dangerouslyAllowBrowser`; log an id and not `patient.name` or `patient.diagnosis`; do not put the note in `localStorage`.
-- `src/app/visit/recorder.tsx`: ask everyone before recording, store the answer, allow the visit without recording; remove the session recorder from pages patients use.
+- `src/app/visit/recorder.tsx`: ask everyone before recording, store the answer, allow the visit without recording; remove the analytics tracker from pages patients use.
 - `src/app/api.py`: list the allowed origins; remove `verify=False`.
 - `.env`: remove it from the repository, add it to `.gitignore`, and treat its values as leaked.
 - `supabase/migrations`: enable row level security on `visit_notes`; replace `using (true)` with a policy that limits rows to their clinic.

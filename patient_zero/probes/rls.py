@@ -27,6 +27,7 @@ _RLS = re.compile(rf"alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?{_NAME}\s+(e
 _POLICY = re.compile(rf'create\s+policy\s+("[^"]+"|[\w$]+)\s+on\s+{_NAME}([^;]*);', re.I | re.S)
 _OPEN = re.compile(r"(?:using|with\s+check)\s*\(\s*true\s*\)", re.I)
 _COMMENTS = re.compile(r"--[^\n]*|/\*.*?\*/", re.S)
+_NOT_NAMES = {"if", "as", "select", "like", "of", "for", "in", "is", "the", "a", "to"}
 SYSTEM_SCHEMAS = {"auth", "storage", "extensions", "pg_catalog", "information_schema", "realtime", "vault", "graphql"}
 
 
@@ -57,6 +58,8 @@ def run(path: str, files: Optional[List[str]] = None) -> ProbeResult:
         events += [(m.start(), "policy", m) for m in _POLICY.finditer(sql)]
         for _, kind, m in sorted(events, key=lambda e: e[0]):
             if kind == "create":
+                if _normalize(m.group(1)).split(".")[-1] in _NOT_NAMES:
+                    continue          # "create table if ..." in a form this reader does not follow, or prose in a comment
                 tables.setdefault(_normalize(m.group(1)), False)
             elif kind == "drop":
                 tables.pop(_normalize(m.group(1)), None)

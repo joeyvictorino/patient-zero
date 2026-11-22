@@ -194,7 +194,7 @@ A clean check is not a pass, and this is not a HIPAA certification. None exists.
 
 It looks for keys written into code or exposed to the browser, a committed `.env`, AI model and transcription companies with no agreement in your `register.yaml`, session recorders and analytics, patient data in log lines, certificate checks switched off, wildcard CORS, audio recording, tables without row level security, and an exposed Docker stack. It never prints a secret it finds. `--json` and `--sarif` are for tools; a line marked `pz:ignore <reason>` is skipped and reported as skipped.
 
-It is a list of text patterns. It misses things and it flags things that are fine, and it cannot see the flaw that matters most, which is who can read whose records. [Its limits are written down.](known-gaps/things-that-do-not-work/20261122-pz-check-is-a-list-of-patterns.md)
+It is a list of text patterns. It misses things and it flags things that are fine ([here is what it got wrong on 13 real packages](docs/FIELD-NOTES.md)), and it cannot see the flaw that matters most, which is who can read whose records. [Its limits are written down.](known-gaps/things-that-do-not-work/20261122-pz-check-is-a-list-of-patterns.md)
 
 **Let your coding agent run it.** `pz mcp` is a read-only Model Context Protocol server; there is a Claude Code skill, a snippet for any agent's instructions file, a GitHub Action and a pre-commit hook. See [`integrations/`](integrations/README.md).
 

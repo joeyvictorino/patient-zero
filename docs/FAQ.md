@@ -4,7 +4,7 @@ Short answers, with the weak points stated. Every known limit also has a file in
 
 ## Isn't `pz check` just a list of regexes?
 
-Yes. It reads files line by line against the patterns in [`check_rules.yaml`](../patient_zero/data/check_rules.yaml). It does not parse code or follow data, so it misses anything written in a way no pattern expects, and it flags some things that are fine. Its hit and miss rates have not been measured on real projects.
+Yes. It reads files line by line against the patterns in [`check_rules.yaml`](../patient_zero/data/check_rules.yaml). It does not parse code or follow data, so it misses anything written in a way no pattern expects, and it flags some things that are fine. It has been run on 13 public packages, where its first attempt was mostly false alarms; [the field notes](FIELD-NOTES.md) list each one and the fix. How much it misses has not been measured.
 
 It exists because the people it is for will not write a target file or stand up a test tenant, and the mistakes it looks for are the ones that make everything else moot: a model key shipped to the browser, patient data sent to a company with no agreement, a table with no row level security. After every run it prints what it could not check, and it says a clean result is not a pass.
 

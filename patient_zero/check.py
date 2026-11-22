@@ -60,6 +60,7 @@ class Issue:
     file: str = ""
     line: int = 0
     detail: str = ""
+    more: int = 0          # further lines in the same file that match the same rule
 
 
 @dataclass
@@ -183,6 +184,8 @@ def _code_only(text: str) -> str:
     return _STRING.sub(lambda m: " " + " ".join(_INTERPOLATED.findall(m.group(0))) + " ", text)
 _ENV_VALUE = re.compile(r"^\s*(?:export\s+)?([A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|PASS|PWD|DSN|DATABASE_URL)[A-Z0-9_]*)"
                         r"\s*=\s*['\"]?([^\s'\"#]{8,})")
+_COMMENT = re.compile(r"^\s*(?:#|//|/\*|\*|<!--|--\s)")
+_NOT_A_SECRET = re.compile(r"(?i)example|placeholder|redacted|\.\.\.|x{6,}|abcdefgh|0123456|your[_-]")
 _PLACEHOLDER = re.compile(r"(?i)^(?:your|xxx|changeme|change-me|example|placeholder|todo|<|\$\{|dummy|test|fake|sk-\.\.\.)")
 
 
@@ -253,21 +256,33 @@ def run(path: str = ".", register: Optional[str] = None, include_tests: bool = F
                           if kind == "code" and spec["name"] not in seen_providers and hinted(spec)]
         if not (live_secrets or live_lines or has_jwt or has_log or live_providers):
             continue
+        seen_in_file: Dict[str, Issue] = {}
         for number, text in enumerate(lines, 1):
             if len(text) > 2000:
                 continue
+            commented = bool(_COMMENT.match(text)) and IGNORE_MARK not in text
             for spec, pattern in live_secrets:
                 m = pattern.search(text)
-                if m and not _PLACEHOLDER.match(m.group(0)[3:]):
+                if m and not _PLACEHOLDER.match(m.group(0)[3:]) and not _NOT_A_SECRET.search(text):
                     add(_issue(rules["secret"], f"secret-{spec['id']}", rel, number, f"{spec['what']}: {_mask(m.group(0))}"), text)
                     break
             if has_jwt:
                 for m in _JWT.finditer(text):
                     if _is_service_role(m.group(0)):
                         add(_issue(rules["service_role"], "secret-supabase-service-role", rel, number, _mask(m.group(0))), text)
+            if commented:
+                continue          # a commented-out line does nothing; secrets above are the exception, a key in a comment still leaks
             for spec, pattern in live_lines:
                 if pattern.search(text):
-                    add(_issue(spec, spec["id"], rel, number), text)
+                    first = seen_in_file.get(spec["id"])
+                    if first is None or IGNORE_MARK in text:
+                        issue = _issue(spec, spec["id"], rel, number)
+                        add(issue, text)
+                        if IGNORE_MARK not in text:
+                            seen_in_file[spec["id"]] = issue
+                    else:               # one finding per rule per file; say how many more lines there are
+                        first.more += 1
+                        first.detail = f"and {first.more} more line(s) in this file"
             if has_log:
                 call = log_call.search(text)
                 if call and log_words.search(_code_only(text[call.end():])):
