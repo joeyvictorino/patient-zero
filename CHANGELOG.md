@@ -5,6 +5,12 @@ Changes to the standard (profile, spec, vectors) are marked **standard**.
 ## Unreleased
 
 ### Added
+- `pz pilot init` and `pz pilot run`: a pilot folder with rules of engagement to sign, synthetic patients, a target file that starts unauthorized and a run sheet; then every configured probe and a plain-language report.
+- `pz synth`: seeded, obviously fake patient records with a test marker per clinic.
+- `pz sandbox`: eleven entry and exit criteria for a healthcare AI sandbox, checked against a pilot folder. Criteria are data in `patient_zero/data/sandbox.yaml`.
+- `pz vendors`: verify every sealed bundle in a folder; a clinic's view of its vendors, or with `--anonymize` a cohort view that ranks nobody.
+- `pz brief legislator` and `pz brief judge`, and `pz overlay <state> --review`: generated one-page briefs and a review form for a lawyer.
+- `docs/COALITIONS.md`, `docs/pilot/HOSTING.md`, `docs/workshop/`, a `Dockerfile`.
 - `pz check`: zero-setup scan of a project folder with plain-language fixes, `--json`, `--sarif`, `pz:ignore` suppression and a `patient_zero.checks` plugin point. Rules are data in `patient_zero/data/check_rules.yaml`.
 - `pz mcp`: a read-only Model Context Protocol server. A Claude Code skill, an agent instructions snippet, a GitHub Action and a pre-commit hook under `integrations/` and the repository root.
 - `pz bundle` and `docs/verify/`: a one-file evidence bundle and a browser page that verifies it offline.

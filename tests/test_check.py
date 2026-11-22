@@ -231,3 +231,11 @@ def test_check_is_fast_enough_for_a_large_project(tmp_path):
     result = check.run(str(tmp_path))
     assert result.files == 400 and not result.issues
     assert time.time() - started < 10, "400 files of ordinary code should take about a second"
+
+
+def test_log_rule_looks_at_what_is_interpolated_not_at_the_words_in_the_message(tmp_path):
+    root = write(tmp_path, {"a.py": 'print(f"patient-zero found {count} bundles")\nlogger.info("patient intake started")\n'
+                                    'print(f"saved {patient.name}")\nlogger.info("note for %s", patient_id)\n',
+                            "b.ts": "console.log(`loaded ${records.length} rows for the patient list`);\nconsole.log(`dx: ${diagnosis}`);\n"})
+    hits = sorted((i.file, i.line) for i in check.run(root).issues if i.rule == "patient-data-in-logs")
+    assert hits == [("a.py", 3), ("b.ts", 2)]

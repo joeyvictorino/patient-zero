@@ -1,0 +1,94 @@
+# Two one-page briefs generated from the profile: questions for people who make rules about AI in health
+# care, and a scorecard for people who judge health AI pitches. `controls` ties each question to the
+# profile; `overlay` ties it to state overlay items where the overlay has something to say.
+# Neither brief takes a position on any bill, vendor or product.
+
+legislator:
+  title: "AI in health care: ten questions worth asking"
+  intro: >-
+    For legislators, agency staff and anyone writing rules or buying for the public. Each question can be put to a vendor, a provider
+    or a witness, and each has an answer that can be checked. They come from an open list of safeguards for AI products that handle
+    patient information. This page takes no position on any bill.
+  questions:
+    - ask: When a clinic uses this AI product, which other companies receive the patient's information?
+      why: The product is rarely one company. The AI model, the hosting and the analytics are often three more, and each one holds patient data.
+      good: A written list of every company, with a signed agreement for each, and something technical that stops data going anywhere else.
+      controls: [TRUST-1, TRUST-2]
+      overlay: [NV-5]
+    - ask: Can the company that makes the AI model keep patient information or train on it?
+      why: Information used to train a model cannot be taken back out.
+      good: A contract clause that bars training on patient data and states how long anything is kept, and proof that data is de-identified before any reuse.
+      controls: [TRUST-3, MEM-2, CONSENT-8]
+    - ask: Is the patient told when AI is involved in their care or their messages, and can they say no?
+      why: People cannot object to what they do not know about.
+      good: The exact notice a patient sees, and a setting that turns AI off for one patient and is honored everywhere.
+      controls: [CONSENT-1, CONSENT-3, CONSENT-4]
+    - ask: Is anyone recorded or transcribed by an AI tool without having agreed?
+      why: AI note-takers record visits and calls. Consent rules for recording differ by state and by whether it is a call or in person.
+      good: Everyone is asked before recording starts, the answer is kept, and the visit goes ahead without recording when someone declines.
+      controls: [CONSENT-2]
+      overlay: [NV-6]
+    - ask: Does the AI ever act on its own, such as sending a message or changing a record, or does a person approve first?
+      why: A wrong answer on a screen is a mistake. A wrong message sent to the wrong person is a breach.
+      good: A person sees the recipient and the content and confirms before anything leaves, and can review AI-written notes and bills before use.
+      controls: [AGENT-2, AGENT-3]
+      overlay: [NV-4]
+    - ask: After something goes wrong, can anyone find out exactly what the AI did?
+      why: An AI system's own account of what it did is not a record. Without an independent log, nobody can investigate.
+      good: A log of every time patient data was read, sent or changed, kept so that edits show, with the AI's actions marked separately from the person's.
+      controls: [LOG-1, LOG-2, AGENT-1]
+    - ask: Is one clinic's patient data kept apart from every other customer's, and has that been tested?
+      why: This is the most common serious flaw in new software, and no document can show it is absent. Only a test can.
+      good: A dated test in which one customer tries to read another's records and fails, repeated for each release.
+      controls: [GATE-3, MEM-1, TEST-1]
+    - ask: Does the AI present itself as a clinician, or provide care itself?
+      why: A person in distress may not tell a chatbot from a professional.
+      good: Marketing and in-product text that never calls the AI a therapist, counselor or doctor, and a feature list limited to support tasks where the law requires it.
+      controls: [AGENT-5]
+      overlay: [NV-1, NV-2, NV-3]
+    - ask: Does the tool work as well for every group of patients?
+      why: A tool trained mostly on one population can be less accurate for others, and nobody sees it unless results are broken down.
+      good: The inputs the tool uses and its measured performance for each patient group, given to the provider who uses it.
+      controls: [CONSENT-6]
+    - ask: Who checked all of this, and can their work be verified?
+      why: 'No HIPAA certification exists, and "compliant" on a website is the vendor''s own word. What matters is who tested what, on which version, and when.'
+      good: Dated evidence for each claim, signed so that later changes show, and co-signed by someone independent of the vendor.
+      controls: [TEST-2, TEST-4]
+  closing: >-
+    A small clinic or a new company can answer these as well as a large one: the list of safeguards and the tools to test them are free.
+    Where a state rule is listed beside a question, it is this project's reading of that rule and not legal advice.
+
+judge:
+  title: "Scorecard for a health AI pitch"
+  intro: >-
+    For judges, mentors and buyers hearing a pitch from a product that will touch patient information. Score each line 0, 1 or 2.
+    It measures whether the team knows what it has and has not done, which predicts more than polish does. A team that says
+    "we have not done that yet, here is the plan" earns a 1. A team that says "we're HIPAA compliant" and cannot say who checked earns a 0.
+  questions:
+    - ask: Where does patient data go?
+      two: Names every company that receives it, including the AI model provider, without being asked twice.
+      controls: [TRUST-1]
+    - ask: Do you have a signed Business Associate Agreement with your AI model provider?
+      two: Yes, and can say what it covers. Or uses made-up data only until one is signed, and says so.
+      controls: [TRUST-3, GATE-2]
+    - ask: Has anyone tested that one customer cannot read another's records?
+      two: A dated test, on the current version, that they can show.
+      controls: [GATE-3, TEST-1]
+    - ask: Do patients know AI is involved, and can they decline?
+      two: Shows the notice and the off switch.
+      controls: [CONSENT-1, CONSENT-4]
+    - ask: What can the AI do without a person approving?
+      two: Nothing that sends patient data out or deletes it. Or a precise list, with the reason for each item.
+      controls: [AGENT-3]
+    - ask: If the AI gets something wrong next month, how would you find out what happened?
+      two: A log the AI cannot edit, with its actions marked separately from the user's.
+      controls: [LOG-1, LOG-2]
+    - ask: What data did you build and test with?
+      two: Made-up data, or real data under a written agreement, de-identified. Never "a friend's clinic sent us some charts".
+      controls: [MEM-2, CONSENT-8]
+    - ask: What have you not done yet?
+      two: A specific, unprompted list. This is the most telling answer of the eight.
+      controls: [MAP-3, TEST-4]
+  closing: >-
+    Sixteen is the top score. A low score early is normal and fixable. The point of the card is that the same eight questions are
+    asked of every team, and that nobody leaves believing a badge on a slide is evidence.

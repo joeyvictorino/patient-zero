@@ -1,0 +1,27 @@
+# Entry and exit criteria for a pilot in a healthcare AI sandbox: a setting where a product is tried
+# safely before it meets real patients. `pz sandbox <pilot folder>` checks each one mechanically.
+# The tool reports which criteria are met. The sandbox's operator decides who is admitted and who graduates.
+entry:
+  - id: permission
+    text: The system's owner has given written permission, and the hosts in scope are listed.
+  - id: synthetic
+    text: The pilot declares that it uses synthetic data only.
+  - id: assessment
+    text: An assessment has been started at a declared level.
+  - id: register
+    text: Every company that could receive patient data is named in the register.
+  - id: no-critical-code
+    text: The code check finds nothing critical, such as a key in the code or a model called from the browser.
+exit:
+  - id: isolation-tested
+    text: One clinic's records were requested as another clinic and with no login, on the current build, and nothing leaked.
+  - id: nothing-failing
+    text: No safeguard is failing.
+  - id: agreements
+    text: Every company in the register has a signed agreement, is barred from training on patient data, and has a stated retention period.
+  - id: no-serious-code
+    text: The code check finds nothing critical or high.
+  - id: sealed
+    text: The evidence is sealed, and the seal verifies.
+  - id: independent
+    text: Someone independent of the vendor has co-signed the seal.

@@ -25,6 +25,7 @@ Three ways in, depending on who you are:
 | Building a health app yourself, often with an AI coding tool | [`pz check .`](#check-your-own-project-in-ten-seconds): no setup, plain-language fixes |
 | A vendor who has to show a clinic what you tested | [Seal it, bundle it, badge it](#show-a-customer-what-you-tested) |
 | A clinic or health system deciding on a vendor | [Verify what they sent you](#if-you-buy-ai-tools-rather-than-build-them), in a browser |
+| A coalition, association or sandbox that convenes them | [Pilots, sandbox criteria, cohort view, briefs](#for-coalitions-sandboxes-and-classrooms) |
 
 The demo's short version, in plain language (`pz demo --brief`):
 
@@ -235,6 +236,27 @@ VERIFIED: signature valid, Merkle root matches, every file unchanged
 ```
 
 The counts are inside the signature, so they cannot be improved after signing. The badge reads `patient-zero | L1 · 2/43 confirmed · sealed 2026-11-22`. It is never green and never says "compliant", "certified" or "passed": it states what the seal states and links to the evidence. [`TRADEMARK.md`](TRADEMARK.md) has the rules for using the name.
+
+## For coalitions, sandboxes and classrooms
+
+Some things only a convening body can do: run a sandbox, brief legislators, train students, see across many vendors. [`docs/COALITIONS.md`](docs/COALITIONS.md) is the guide.
+
+```
+pz pilot init pilot --product "Product" --base-url https://staging.example.com   # permission form, test data, target file, run sheet
+pz synth --patients 50 -o patients.json       # made-up records that cannot be mistaken for real ones, with a test marker per clinic
+pz pilot run pilot                            # every configured probe, then pilot-report.md in plain language
+pz sandbox pilot --path ./product             # which sandbox entry and exit criteria the pilot meets
+pz vendors bundles/ --anonymize               # across many sealed reports: what fails most, what nobody has confirmed
+pz brief legislator --overlay nevada          # ten questions with checkable answers, and what state rules say today
+pz brief judge                                # an eight-question scorecard for health AI pitches
+pz overlay nevada --review                    # a form for a lawyer in that state to mark up
+```
+
+- **A first pilot in about an hour.** `pz pilot init` writes the rules of engagement for the system's owner to sign, synthetic patients, a target file that starts unauthorized, and a run sheet. [`docs/pilot/HOSTING.md`](docs/pilot/HOSTING.md) and the `Dockerfile` are for whoever provides the machine.
+- **Sandbox entry and exit that can be checked.** Eleven criteria in [`sandbox.yaml`](patient_zero/data/sandbox.yaml), each reported as met, not met or not checked, with the reason. The operator decides who is admitted.
+- **One view across many vendors.** `pz vendors` verifies every bundle in a folder. A clinic sees which of its vendors' reports are current, co-signed and failing nothing. A coalition, with `--anonymize`, sees which safeguards fail most often across its members without ranking them.
+- **Briefs for people who do not build software.** [Ten questions for legislators](docs/LEGISLATOR-BRIEF.md) and [a pitch scorecard](docs/PITCH-SCORECARD.md), generated from the profile. Neither takes a position on a bill, a vendor or a product.
+- **A 45-minute lab** for students and new developers: [`docs/workshop/LAB.md`](docs/workshop/LAB.md), with instructor notes and versions for buyers and policy audiences.
 
 ## Signed evidence, disclosed one file at a time
 

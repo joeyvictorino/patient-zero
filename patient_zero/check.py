@@ -170,7 +170,17 @@ def _is_service_role(token: str) -> bool:
 
 
 _JWT = re.compile(r"\beyJ[A-Za-z0-9_\-]{8,}\.eyJ[A-Za-z0-9_\-]{8,}\.[A-Za-z0-9_\-]{8,}")
-_PLAIN_STRING = re.compile(r"""(?<![fFbBrR])"[^"{}$\n]*"|(?<![fFbBrR])'[^'{}$\n]*'""")
+_STRING = re.compile(r"""[fFrRbB]{0,2}(?:"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`)""")
+_INTERPOLATED = re.compile(r"\{([^{}]*)\}")
+
+
+def _code_only(text: str) -> str:
+    """A line with the words inside string literals removed, keeping only what is interpolated into them.
+
+    A log line whose message merely contains the word "patient" logs no patient. One that interpolates
+    a patient's field into the message does. tests/test_check.py has both cases.
+    """
+    return _STRING.sub(lambda m: " " + " ".join(_INTERPOLATED.findall(m.group(0))) + " ", text)
 _ENV_VALUE = re.compile(r"^\s*(?:export\s+)?([A-Z0-9_]*(?:KEY|SECRET|TOKEN|PASSWORD|PASS|PWD|DSN|DATABASE_URL)[A-Z0-9_]*)"
                         r"\s*=\s*['\"]?([^\s'\"#]{8,})")
 _PLACEHOLDER = re.compile(r"(?i)^(?:your|xxx|changeme|change-me|example|placeholder|todo|<|\$\{|dummy|test|fake|sk-\.\.\.)")
@@ -260,7 +270,7 @@ def run(path: str = ".", register: Optional[str] = None, include_tests: bool = F
                     add(_issue(spec, spec["id"], rel, number), text)
             if has_log:
                 call = log_call.search(text)
-                if call and log_words.search(_PLAIN_STRING.sub('""', text[call.end():])):
+                if call and log_words.search(_code_only(text[call.end():])):
                     add(_issue(rules["log_rule"], rules["log_rule"]["id"], rel, number), text)
             for spec, pattern in live_providers:
                 if spec["name"] not in seen_providers and pattern.search(text) and IGNORE_MARK not in text:

@@ -80,6 +80,9 @@ def _cmd_questionnaire(args) -> int:
 
 
 def _cmd_overlay(args) -> int:
+    if args.review:
+        sys.stdout.write(buyer.overlay_review(args.name))
+        return EXIT_OK
     if args.markdown:
         sys.stdout.write(buyer.overlay_markdown(args.name))
         return EXIT_OK
@@ -511,6 +514,74 @@ def _cmd_check(args) -> int:
     return EXIT_FINDINGS if result.failed(args.fail_on) else EXIT_OK
 
 
+def _write_or_print(text: str, output: Optional[str], note: str = "") -> None:
+    if output:
+        with open(output, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"wrote {output}" + (f": {note}" if note else ""))
+    else:
+        sys.stdout.write(text)
+
+
+def _cmd_synth(args) -> int:
+    from . import synth
+
+    data = synth.generate(args.patients, args.seed, args.tenants)
+    markers = ", ".join(f"{t['tenant']}={t['canary']}" for t in data["tenants"])
+    _write_or_print(synth.to_csv(data) if args.csv else synth.to_json(data), args.output,
+                    f"{args.patients} made-up patients; test markers {markers}")
+    return EXIT_OK
+
+
+def _cmd_pilot(args) -> int:
+    from . import pilot
+
+    if args.pilot_command == "init":
+        written = pilot.init(args.folder, args.product, args.level, args.base_url, args.patients)
+        print(f"wrote {args.folder}/: {', '.join(written)}")
+        print("Start with PILOT.md. Nothing can be tested until rules-of-engagement.md is signed and target.yaml says authorized: true.")
+        return EXIT_OK
+    outcome = pilot.run(args.folder, args.path)
+    for r in outcome["ran"]:
+        print(f"{r['probe']}: {r['checks']} checks, " + ("VOID" if r["void"] else f"{len(r['findings'])} kind(s) of finding"))
+    for s in outcome["skipped"]:
+        print(f"skipped {s}")
+    print(f"report: {outcome['report']}")
+    return EXIT_FINDINGS if outcome["failed"] else EXIT_OK
+
+
+def _cmd_vendors(args) -> int:
+    from . import fleet
+
+    rows = fleet.read(args.folder)
+    if not rows:
+        print(f"no patient-zero bundles in {args.folder}. A vendor makes one with `pz bundle`.", file=sys.stderr)
+        return EXIT_USAGE
+    if args.json:
+        for row in rows:
+            row.pop("statuses", None)
+        text = json.dumps({"reports": rows, "cohort": fleet.cohort(fleet.read(args.folder))}, indent=2) + "\n"
+    else:
+        text = fleet.render(rows, anonymize=args.anonymize)
+    _write_or_print(text, args.output)
+    return EXIT_FINDINGS if any(not r["verified"] for r in rows) else EXIT_OK
+
+
+def _cmd_sandbox(args) -> int:
+    from . import sandbox
+
+    result = sandbox.evaluate(args.folder, args.path)
+    sys.stdout.write(json.dumps(result, indent=2) + "\n" if args.json else sandbox.render(result))
+    return EXIT_OK if result["entry_met"] else EXIT_FINDINGS
+
+
+def _cmd_brief(args) -> int:
+    from . import brief
+
+    sys.stdout.write(brief.render(args.audience, args.overlay))
+    return EXIT_OK
+
+
 def _cmd_demo(args) -> int:
     if args.serve:
         from .demo.leaky_clinic import serve
@@ -562,7 +633,48 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("overlay", help="state requirements on top of HIPAA")
     p.add_argument("name", choices=buyer.overlays())
     p.add_argument("--markdown", action="store_true")
+    p.add_argument("--review", action="store_true", help="a form for a lawyer in that state to mark up")
     p.set_defaults(func=_cmd_overlay)
+
+    p = sub.add_parser("synth", help="made-up patient records for a pilot, obviously fake, with a test marker per clinic")
+    p.add_argument("--patients", type=int, default=25)
+    p.add_argument("--tenants", type=int, default=2, help="how many test clinics to split them across")
+    p.add_argument("--seed", type=int, default=1, help="same seed, same records")
+    p.add_argument("--csv", action="store_true")
+    p.add_argument("-o", "--output")
+    p.set_defaults(func=_cmd_synth)
+
+    p = sub.add_parser("pilot", help="everything one real pilot needs: permission form, test data, target file, run sheet")
+    pilotsub = p.add_subparsers(dest="pilot_command", required=True)
+    v = pilotsub.add_parser("init", help="write the pilot folder")
+    v.add_argument("folder")
+    v.add_argument("--product", required=True)
+    v.add_argument("--level", choices=profile_mod.LEVELS, default="L1")
+    v.add_argument("--base-url", default="https://staging.example.com", help="the test system, never production")
+    v.add_argument("--patients", type=int, default=20)
+    v.set_defaults(func=_cmd_pilot)
+    v = pilotsub.add_parser("run", help="run every probe the target configures and write pilot-report.md")
+    v.add_argument("folder", nargs="?", default=".")
+    v.add_argument("--path", help="also check the product's source folder")
+    v.set_defaults(func=_cmd_pilot)
+
+    p = sub.add_parser("vendors", help="read a folder of sealed bundles: which are current, verified, co-signed, failing")
+    p.add_argument("folder")
+    p.add_argument("--anonymize", action="store_true", help="Product A, Product B: for a cohort that will not rank its members")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("-o", "--output")
+    p.set_defaults(func=_cmd_vendors)
+
+    p = sub.add_parser("sandbox", help="which entry and exit criteria of a healthcare AI sandbox a pilot meets")
+    p.add_argument("folder", nargs="?", default=".")
+    p.add_argument("--path", help="the product's source folder, for the code criteria")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(func=_cmd_sandbox)
+
+    p = sub.add_parser("brief", help="a one-page brief for people who do not build software")
+    p.add_argument("audience", choices=["legislator", "judge"])
+    p.add_argument("--overlay", choices=buyer.overlays(), help="show what that state's rules say beside each question")
+    p.set_defaults(func=_cmd_brief)
 
     p = sub.add_parser("init", help="start an assessment file")
     p.add_argument("--product", required=True)
