@@ -1,0 +1,62 @@
+{
+ "cases": [
+  {
+   "canonical_hex": "7b7d",
+   "name": "empty object",
+   "value": {}
+  },
+  {
+   "canonical_hex": "7b2243223a332c2261223a322c2262223a317d",
+   "name": "keys sorted",
+   "value": {
+    "C": 3,
+    "a": 2,
+    "b": 1
+   }
+  },
+  {
+   "canonical_hex": "7b2261223a7b2262223a5b5d2c2279223a2278227d2c227a223a5b312c2274776f222c6e756c6c2c747275652c66616c73655d7d",
+   "name": "nested",
+   "value": {
+    "a": {
+     "b": [],
+     "y": "x"
+    },
+    "z": [
+     1,
+     "two",
+     null,
+     true,
+     false
+    ]
+   }
+  },
+  {
+   "canonical_hex": "7b22656d6f6a69223a225c75643833645c7564653030222c226e616d65223a22436c5c75303065646e696361204e695c75303066316f227d",
+   "name": "non-ascii escaped",
+   "value": {
+    "emoji": "\ud83d\ude00",
+    "name": "Cl\u00ednica Ni\u00f1o"
+   }
+  },
+  {
+   "canonical_hex": "7b2274223a226c696e655c6e627265616b5c745c2271756f7465645c22205c5c20736c617368202f227d",
+   "name": "control characters and quotes",
+   "value": {
+    "t": "line\nbreak\t\"quoted\" \\ slash /"
+   }
+  },
+  {
+   "canonical_hex": "7b22626c616b6532625f323536223a2230303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c226279746573223a31372c2270617468223a2265766964656e63652f612e6a736f6e227d",
+   "name": "seal leaf",
+   "value": {
+    "blake2b_256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "bytes": 17,
+    "path": "evidence/a.json"
+   }
+  }
+ ],
+ "description": "UTF-8 bytes of the canonical form: keys sorted by code point, no spaces, non-ASCII as \\uXXXX (UTF-16 code units), integers only.",
+ "kind": "canonical-json",
+ "spec": "0.1"
+}

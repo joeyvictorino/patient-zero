@@ -71,8 +71,9 @@ def compose_files(path: str) -> List[str]:
     return sorted(set(found))
 
 
-def run(path: str) -> ProbeResult:
-    files = compose_files(path)
+def run(path: str, files: Optional[List[str]] = None) -> ProbeResult:
+    """Read the Compose files at path, or exactly the files given."""
+    files = sorted(files) if files is not None else compose_files(path)
     if not files:
         raise ProbeRefused(f"no Docker Compose file found at {path}")
     result = ProbeResult("stack", CONTROLS, os.path.abspath(path))

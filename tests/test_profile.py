@@ -5,16 +5,16 @@ from patient_zero import profile
 
 def test_catalogue_loads_and_counts():
     prof = profile.load()
-    assert len(prof.controls) == 43
-    assert len(prof.families) == 8
+    assert len(prof.controls) == 51
+    assert len(prof.families) == 9
     assert profile.validate(prof) == []
 
 
 def test_levels_are_cumulative():
     prof = profile.load()
     assert len(prof.for_level("L0")) == 5
-    assert len(prof.for_level("L1")) == 35
-    assert len(prof.for_level("L2")) == 43
+    assert len(prof.for_level("L1")) == 43
+    assert len(prof.for_level("L2")) == 51
     assert {c.family for c in prof.for_level("L0")} == {"GATE"}
     l1 = {c.id for c in prof.for_level("L1")}
     assert "TEST-5" not in l1 and "AGENT-1" not in l1

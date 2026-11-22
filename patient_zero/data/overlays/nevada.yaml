@@ -11,6 +11,10 @@ laws:
     title: Senate Bill 370 (2023), consumer health data, NRS 603A.500 to 603A.590
     effective: "2024-03-31"
     source: https://dwt.com/gcp/state-privacy-laws-tracker/broad-state-privacy-law-tracker/nevada
+  NRS200:
+    title: NRS 200.620 and 200.650, interception and recording of wire communications and private conversations
+    source: https://www.leg.state.nv.us/NRS/NRS-200.html
+    note: text checked 2026-11-21; the all-party reading comes from Lane v. Allstate (Nev. 1998), which was not re-read
 items:
   - id: NV-1
     law: AB406
@@ -52,3 +56,11 @@ items:
     plain: Health information about people who are not yet our patients, such as website visitors, is covered by a separate Nevada law unless the vendor is exempt.
     ask: Do you collect health-related information about people before they become our patients, and how do you comply with Nevada's consumer health data law for it?
     proof: Their consumer health data privacy policy, or their written basis for exemption.
+  - id: NV-6
+    law: NRS200
+    cite: "NRS 200.620, 200.650"
+    applies: AI scribes, call summaries and any feature that records or transcribes conversations with people in Nevada
+    statement: A feature that records or transcribes a phone or video call shall obtain the consent of every party before recording. NRS 200.620 bars intercepting a wire communication without one party's consent plus a court order or emergency, and the Nevada Supreme Court has read it to bar taping a call with only one party's consent (Lane v. Allstate, 1998; extended to cell phones in Sharpe v. State, 2015). It does not reach a recording made entirely outside Nevada (Ditech v. Buckles, 2017). In-person conversations under NRS 200.650 need one party's authorization; CONSENT-2 in the profile asks for every party's agreement in all cases.
+    plain: Nobody on a phone or video call may be recorded or transcribed by an AI tool unless everyone on the call has agreed first.
+    ask: When your AI records or transcribes a phone or video visit, how does it get every participant's agreement before it starts, and what happens if one person says no?
+    proof: The consent prompt or script for calls, where the agreement is stored, and the behavior when someone declines. Confirm the reading of NRS 200.620 with Nevada counsel.

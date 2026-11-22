@@ -275,6 +275,47 @@ def calibration(assessment: Dict[str, Any]) -> List[Dict[str, Any]]:
     return rows
 
 
+CALIBRATION_SCHEMA = "patient-zero-calibration-v1"
+
+
+def export_calibration(assessment: Dict[str, Any]) -> Dict[str, Any]:
+    """Settled predictions with everything identifying removed, for pooling across organizations.
+
+    Names become f1, f2, ... in order of first appearance. The product name,
+    notes, evidence paths and exact dates are left out; only the month stays.
+    """
+    aliases: Dict[str, str] = {}
+    records = []
+    for q in assessment.get("predictions") or []:
+        if q.get("outcome") is None:
+            continue
+        alias = aliases.setdefault(q["by"], f"f{len(aliases) + 1}")
+        records.append({"probe": q["probe"], "forecaster": alias, "p_clean": q["p_clean"], "model_p_clean": q.get("model_p_clean"),
+                        "outcome": q["outcome"], "month": str(q.get("settled") or "")[:7]})
+    return {"schema": CALIBRATION_SCHEMA, "profile_version": assessment.get("profile_version"), "level": assessment.get("level"),
+            "records": records}
+
+
+def pooled_calibration(exports: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """How well belief.yaml and people forecast, per probe, across every contributed file."""
+    per_probe: Dict[str, Dict[str, List[float]]] = {}
+    for doc in exports:
+        if not isinstance(doc, dict) or doc.get("schema") != CALIBRATION_SCHEMA:
+            continue
+        for r in doc.get("records") or []:
+            actual = 1.0 if r["outcome"] == "clean" else 0.0
+            slot = per_probe.setdefault(r["probe"], {"people": [], "model": [], "clean": []})
+            slot["people"].append((float(r["p_clean"]) - actual) ** 2)
+            slot["clean"].append(actual)
+            if r.get("model_p_clean") is not None:
+                slot["model"].append((float(r["model_p_clean"]) - actual) ** 2)
+    mean = lambda xs: sum(xs) / len(xs) if xs else None  # noqa: E731
+    rows = [{"probe": probe, "settled": len(v["people"]), "clean_rate": mean(v["clean"]), "brier_people": mean(v["people"]),
+             "brier_model": mean(v["model"])} for probe, v in sorted(per_probe.items())]
+    return {"files": sum(1 for d in exports if isinstance(d, dict) and d.get("schema") == CALIBRATION_SCHEMA),
+            "settled": sum(r["settled"] for r in rows), "probes": rows}
+
+
 def bar(p: float, width: int = 20) -> str:
     filled = int(round(p * width))
     return "#" * filled + "." * (width - filled)

@@ -148,7 +148,7 @@ def test_known_gap_files_are_well_formed():
     open_gaps = os.listdir(os.path.join(ROOT, "known-gaps", "things-that-do-not-work"))
     s = coverage.summary(PROF)
     unprobed = s["controls"] - s["probed"]
-    words = {32: "thirty-two"}
+    words = {40: "forty"}
     assert any(words.get(unprobed, str(unprobed)) in name for name in open_gaps), "update the no-probe gap file name"
 
 

@@ -172,3 +172,35 @@ TEST-5:
   plain: Each time the AI model or its instructions change, it is retested against attacks before release.
   ask: When you change the AI model or its instructions, what testing happens before our staff use it?
   proof: Results from the test run before the last model change.
+CONSENT-1:
+  plain: Messages the AI writes to patients, and that no clinician checked first, say that AI wrote them and how to reach a person.
+  ask: When your AI sends a message to a patient that no clinician reviewed, does the message say it came from AI and how to reach a person?
+  proof: A sample patient message showing the notice, and the setting that controls when it appears.
+CONSENT-2:
+  plain: Nobody is recorded for an AI feature until everyone in the conversation has been told and has agreed, and saying no still allows the visit.
+  ask: Before your product records or transcribes a visit or call, how is every person told and asked, where is their answer kept, and what happens if they say no?
+  proof: The screen or script used to ask, a sample of the stored agreement, and the visit flow with recording turned off.
+CONSENT-3:
+  plain: The vendor explains each AI feature, what patient data it uses and where it falls short, in words we can pass on to patients.
+  ask: For each AI feature, can you give us a plain description of what it does, what patient information it uses, its known limits and whether a person checks it?
+  proof: The written description for every AI feature, dated and matching the current release.
+CONSENT-4:
+  plain: If a patient says no to AI, we can switch AI off for that patient, and the product keeps to that everywhere.
+  ask: If a patient asks that AI not be used with their information, how do we turn it off for that one patient, and which features does that cover?
+  proof: The per-patient setting, and a test showing that no AI feature or automated task uses that patient's information once it is off.
+CONSENT-5:
+  plain: Addiction treatment records, which federal law protects more strictly, stay within the work the vendor does for us unless the patient consents.
+  ask: Will you sign the agreement 42 CFR Part 2 requires, and what keeps addiction treatment records from other companies and other uses without the patient's written consent?
+  proof: The signed agreement, how such records are identified, and a test showing they are refused for any use the agreement and consent do not cover.
+CONSENT-6:
+  plain: AI that helps with care decisions comes with the facts we need to check it does not treat some patients worse, such as by race, sex, age or disability.
+  ask: Which inputs does your AI use to support care decisions, does it use race, sex, age, disability or national origin, and how well does it perform for each patient group?
+  proof: The list of inputs and performance results broken down by patient group, for the current version.
+CONSENT-7:
+  plain: Patients can see and correct what the AI wrote in their record, and we can list every time the AI shared their information.
+  ask: Can we give a patient a copy of what your AI wrote in their record within days, let them correct it, and list each time the AI sent their information somewhere?
+  proof: A sample record export that includes AI-written content and how long it takes, and a sample list of disclosures that includes ones the AI made.
+CONSENT-8:
+  plain: Before patient information is used to test or improve the AI, it has names and other identifying details removed by an accepted method.
+  ask: Do you use our patient information to test or improve your AI, and if so, how do you remove identifying details first and who checked it?
+  proof: The written method, and the review or expert sign-off that the information can no longer identify anyone.

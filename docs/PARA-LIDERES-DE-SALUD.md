@@ -2,13 +2,13 @@
 
 **El problema.** Los proveedores de inteligencia artificial están llegando a cada consultorio, clínica y hospital. Todos dicen que su producto es seguro para los datos de los pacientes. La mayoría de las organizaciones pequeñas no tiene cómo comprobarlo, y la mayoría de los proveedores pequeños no puede pagar los meses de consultoría que cuesta demostrarlo. Las herramientas útiles se quedan detenidas y las riesgosas entran con un apretón de manos.
 
-**Qué es patient-zero.** Una lista abierta y gratuita de 43 salvaguardas que un producto de IA debe tener antes de tocar información de pacientes, escrita dos veces: una para los ingenieros que construyen el producto y otra en lenguaje sencillo para quienes lo compran. Incluye software que prueba algunas de esas salvaguardas de forma automática y empaqueta la evidencia de modo que no pueda modificarse después sin que se note.
+**Qué es patient-zero.** Una lista abierta y gratuita de 51 salvaguardas que un producto de IA debe tener antes de tocar información de pacientes, incluido si se informa a los pacientes cuando interviene la IA y si pueden negarse, escrita dos veces: una para los ingenieros que construyen el producto y otra en lenguaje sencillo para quienes lo compran. Incluye software que prueba algunas de esas salvaguardas de forma automática y empaqueta la evidencia de modo que no pueda modificarse después sin que se note.
 
 **Lo que usted puede hacer hoy, sin personal técnico.**
 
 1. **Envíe el cuestionario al proveedor.** [`VENDOR-QUESTIONNAIRE.md`](VENDOR-QUESTIONNAIRE.md) (en inglés) presenta cada salvaguarda como una pregunta sencilla e indica qué debe acompañar a una buena respuesta. Un proveedor que dice que sí pero no puede mostrar la evidencia no ha respondido.
 2. **Pida un informe sellado.** Un proveedor que usa patient-zero puede entregarle un resumen de una página en lenguaje sencillo y un paquete de evidencia firmado. Si se cambia cualquier archivo después de la firma, la verificación falla.
-3. **Revise los puntos de Nevada.** [`NEVADA.md`](NEVADA.md) (en inglés) cubre lo que la ley de Nevada añade para la IA: los límites de 2025 al uso de IA en la atención de salud mental y conductual (AB 406) y la ley de datos de salud del consumidor (SB 370).
+3. **Revise los puntos de Nevada.** [`NEVADA.md`](NEVADA.md) (en inglés) cubre lo que la ley de Nevada añade para la IA: los límites de 2025 al uso de IA en la atención de salud mental y conductual (AB 406) la ley de datos de salud del consumidor (SB 370) y el consentimiento antes de que una herramienta de IA grabe una llamada.
 
 **Cuánto cuesta.** Nada. Es código abierto con licencia MIT. Sin cuenta, sin cuota, y no envía datos a ningún lado.
 

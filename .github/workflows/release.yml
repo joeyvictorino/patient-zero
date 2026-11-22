@@ -1,0 +1,37 @@
+# Publishes to PyPI when a version tag is pushed, using PyPI trusted publishing (no stored token).
+# One-time setup by the maintainer, on pypi.org: add this repository and this workflow as a trusted
+# publisher for the project "patient-zero", with the environment name "pypi".
+name: release
+on:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev,sign]" build
+      - run: pytest -q
+      - run: pz conformance
+      - name: Tag must match the package version
+        run: test "v$(python -c 'import patient_zero; print(patient_zero.__version__)')" = "$GITHUB_REF_NAME"
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

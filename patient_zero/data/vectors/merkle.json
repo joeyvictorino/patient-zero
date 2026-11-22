@@ -1,0 +1,337 @@
+{
+ "cases": [
+  {
+   "leaves_hex": [],
+   "name": "0 leaves",
+   "proofs": [],
+   "root": "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30"
+   ],
+   "name": "1 leaves",
+   "proofs": [
+    []
+   ],
+   "root": "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30",
+    "6c6561662d31"
+   ],
+   "name": "2 leaves",
+   "proofs": [
+    [
+     [
+      "R",
+      "e43422ecb1beb051ca48d6f46a4950c7272d74ae96b03e72841e6e90f1db9c7e"
+     ]
+    ],
+    [
+     [
+      "L",
+      "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+     ]
+    ]
+   ],
+   "root": "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30",
+    "6c6561662d31",
+    "6c6561662d32"
+   ],
+   "name": "3 leaves",
+   "proofs": [
+    [
+     [
+      "R",
+      "e43422ecb1beb051ca48d6f46a4950c7272d74ae96b03e72841e6e90f1db9c7e"
+     ],
+     [
+      "R",
+      "277bbdc3998670f097757b59f628efc73ea0fe4a4295e1eabe598971b3549599"
+     ]
+    ],
+    [
+     [
+      "L",
+      "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+     ],
+     [
+      "R",
+      "277bbdc3998670f097757b59f628efc73ea0fe4a4295e1eabe598971b3549599"
+     ]
+    ],
+    [
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ]
+    ]
+   ],
+   "root": "55d054ebeb3152b0ccc9ee37e2bf2565344fc079e77b61dc0509c7c1d91dd9f5"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30",
+    "6c6561662d31",
+    "6c6561662d32",
+    "6c6561662d33"
+   ],
+   "name": "4 leaves",
+   "proofs": [
+    [
+     [
+      "R",
+      "e43422ecb1beb051ca48d6f46a4950c7272d74ae96b03e72841e6e90f1db9c7e"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ]
+    ],
+    [
+     [
+      "L",
+      "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ]
+    ],
+    [
+     [
+      "R",
+      "402526e3c32fba77e9a003811a4aa67c84e93df216cf6beaaab7604c5f66e9aa"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ]
+    ],
+    [
+     [
+      "L",
+      "277bbdc3998670f097757b59f628efc73ea0fe4a4295e1eabe598971b3549599"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ]
+    ]
+   ],
+   "root": "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30",
+    "6c6561662d31",
+    "6c6561662d32",
+    "6c6561662d33",
+    "6c6561662d34"
+   ],
+   "name": "5 leaves",
+   "proofs": [
+    [
+     [
+      "R",
+      "e43422ecb1beb051ca48d6f46a4950c7272d74ae96b03e72841e6e90f1db9c7e"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ],
+     [
+      "R",
+      "b72fae58de8300ed518470e34c6ae5f0a50a5a5b5e87427d89745275055140c1"
+     ]
+    ],
+    [
+     [
+      "L",
+      "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ],
+     [
+      "R",
+      "b72fae58de8300ed518470e34c6ae5f0a50a5a5b5e87427d89745275055140c1"
+     ]
+    ],
+    [
+     [
+      "R",
+      "402526e3c32fba77e9a003811a4aa67c84e93df216cf6beaaab7604c5f66e9aa"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ],
+     [
+      "R",
+      "b72fae58de8300ed518470e34c6ae5f0a50a5a5b5e87427d89745275055140c1"
+     ]
+    ],
+    [
+     [
+      "L",
+      "277bbdc3998670f097757b59f628efc73ea0fe4a4295e1eabe598971b3549599"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ],
+     [
+      "R",
+      "b72fae58de8300ed518470e34c6ae5f0a50a5a5b5e87427d89745275055140c1"
+     ]
+    ],
+    [
+     [
+      "L",
+      "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+     ]
+    ]
+   ],
+   "root": "9c479a1682024f7632444814bfd09270da9b382047184a2ece72fb3ca875fc7b"
+  },
+  {
+   "leaves_hex": [
+    "6c6561662d30",
+    "6c6561662d31",
+    "6c6561662d32",
+    "6c6561662d33",
+    "6c6561662d34",
+    "6c6561662d35",
+    "6c6561662d36",
+    "6c6561662d37"
+   ],
+   "name": "8 leaves",
+   "proofs": [
+    [
+     [
+      "R",
+      "e43422ecb1beb051ca48d6f46a4950c7272d74ae96b03e72841e6e90f1db9c7e"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ],
+     [
+      "R",
+      "6ca53b80485dfe0c9d2be72bc1fd8600653d3dca229d70077e7ba2525c868a93"
+     ]
+    ],
+    [
+     [
+      "L",
+      "a5cb1c72689aab7acbf03cc4d7a3ae52a770ef186014d84433eb9c321b7e8761"
+     ],
+     [
+      "R",
+      "c7a6bbd64107a91ebfadefe830b7e9951748baf0182da551c9a6f704fb5ec821"
+     ],
+     [
+      "R",
+      "6ca53b80485dfe0c9d2be72bc1fd8600653d3dca229d70077e7ba2525c868a93"
+     ]
+    ],
+    [
+     [
+      "R",
+      "402526e3c32fba77e9a003811a4aa67c84e93df216cf6beaaab7604c5f66e9aa"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ],
+     [
+      "R",
+      "6ca53b80485dfe0c9d2be72bc1fd8600653d3dca229d70077e7ba2525c868a93"
+     ]
+    ],
+    [
+     [
+      "L",
+      "277bbdc3998670f097757b59f628efc73ea0fe4a4295e1eabe598971b3549599"
+     ],
+     [
+      "L",
+      "e10d915faab406689186e0251e9bd5cc53b2b9525c1ea544c86e5fe57ece8bf6"
+     ],
+     [
+      "R",
+      "6ca53b80485dfe0c9d2be72bc1fd8600653d3dca229d70077e7ba2525c868a93"
+     ]
+    ],
+    [
+     [
+      "R",
+      "551dbece36bb3ce5b056f173502be468e92a2ad7a88496df0175393ea39cc031"
+     ],
+     [
+      "R",
+      "b2da80fc9db9f19e38f99aa75b884511e8068589207ae1c9b57ecfbad96315ae"
+     ],
+     [
+      "L",
+      "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+     ]
+    ],
+    [
+     [
+      "L",
+      "b72fae58de8300ed518470e34c6ae5f0a50a5a5b5e87427d89745275055140c1"
+     ],
+     [
+      "R",
+      "b2da80fc9db9f19e38f99aa75b884511e8068589207ae1c9b57ecfbad96315ae"
+     ],
+     [
+      "L",
+      "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+     ]
+    ],
+    [
+     [
+      "R",
+      "c64869b26f2125ce5a77d6a5af55442770d405e572ebe6d2d9543f0488ed8e09"
+     ],
+     [
+      "L",
+      "c07aaf57a2049edd0633d02d8e09125865f84d81344b636afa8c1221e01a4760"
+     ],
+     [
+      "L",
+      "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+     ]
+    ],
+    [
+     [
+      "L",
+      "3224d19bc5022df21801c70e3251020930f02b9ffcb6aa5f214dd22626db0226"
+     ],
+     [
+      "L",
+      "c07aaf57a2049edd0633d02d8e09125865f84d81344b636afa8c1221e01a4760"
+     ],
+     [
+      "L",
+      "9b67219ecc791ef35c029c4436abd0d1c503594645413284119a3472eca180a1"
+     ]
+    ]
+   ],
+   "root": "3652fddd513cb064cdb413d7150a25c002d3a9cae4a707e1db2e3738f9efdc0e"
+  }
+ ],
+ "description": "RFC 6962 topology with BLAKE2b-256. Leaf = H(0x00 || data), node = H(0x01 || left || right), an odd node is promoted unchanged, the empty tree's root is H(0x00). Proof steps are [side of the sibling, sibling hash].",
+ "kind": "merkle",
+ "spec": "0.1"
+}

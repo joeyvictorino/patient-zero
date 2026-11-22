@@ -92,6 +92,19 @@ class Response:
         return 200 <= self.status < 300
 
 
+def host_in_scope(host: str, authorized: List[str]) -> bool:
+    """True when host equals an entry, or sits under a `*.example.com` entry (not the bare domain)."""
+    host = host.lower().rstrip(".")
+    for entry in authorized:
+        entry = entry.lower().strip().rstrip(".")
+        if entry.startswith("*."):
+            if host.endswith(entry[1:]) and host != entry[2:]:
+                return True
+        elif host == entry:
+            return True
+    return False
+
+
 def load_target(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as fh:
         target = yaml.safe_load(fh) or {}
@@ -109,6 +122,15 @@ def load_target(path: str) -> Dict[str, Any]:
     parsed = urlparse(base)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
         raise ProbeRefused("target file needs a `base_url` such as https://staging.example.com")
+    hosts = target.get("authorized_hosts")
+    if not isinstance(hosts, list) or not hosts or not all(isinstance(h, str) and h for h in hosts):
+        raise ProbeRefused(
+            "target file must list `authorized_hosts`: the hosts your written permission covers, copied from the rules of engagement."
+        )
+    if not host_in_scope(parsed.hostname or "", hosts):
+        raise ProbeRefused(
+            f"base_url host {parsed.hostname} is not in `authorized_hosts` ({', '.join(hosts)}). Test only what you have permission to test."
+        )
     target["base_url"] = base.rstrip("/")
     target["_dir"] = os.path.dirname(os.path.abspath(path))
     target["_tape"] = []

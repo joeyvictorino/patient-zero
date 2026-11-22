@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "patient-zero": {
+      "command": "pz",
+      "args": ["mcp"]
+    }
+  }
+}

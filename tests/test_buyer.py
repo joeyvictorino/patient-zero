@@ -26,7 +26,7 @@ def test_every_control_has_plain_language_and_no_jargon():
 
 def test_questionnaire_covers_the_level_and_the_overlay():
     text = buyer.questionnaire(PROF, "L1", "nevada")
-    assert text.count("\n| ") - 2 * 8 == 35 + 5      # 7 family tables + Nevada, two header rows each
+    assert text.count("\n| ") - 2 * 9 == 43 + 6      # 8 family tables + Nevada, two header rows each
     assert "(GATE-1)" in text and "(AGENT-1)" not in text and "(NV-1)" in text
     assert "is not legal advice" in text
     assert "(AGENT-1)" in buyer.questionnaire(PROF, "L2")
@@ -40,7 +40,7 @@ def test_generated_buyer_documents_are_up_to_date():
 
 def test_nevada_overlay_is_well_formed():
     data = buyer.load_overlay("nevada")
-    assert [i["id"] for i in data["items"]] == ["NV-1", "NV-2", "NV-3", "NV-4", "NV-5"]
+    assert [i["id"] for i in data["items"]] == ["NV-1", "NV-2", "NV-3", "NV-4", "NV-5", "NV-6"]
     for item in data["items"]:
         assert item["law"] in data["laws"] and "shall" in item["statement"] and item["ask"].endswith("?")
     assert data["laws"]["AB406"]["effective"] == "2025-07-01"
@@ -56,7 +56,7 @@ def test_executive_summary_says_not_ready_when_something_failed():
     failing.add("GATE-3", "critical", "returned tenant A's data to another tenant")
     assess.apply_probe(data, failing, "e.json")
     text = buyer.executive_summary(data, PROF)
-    assert "Bottom line: not ready. 1 of 35 safeguards failed a test." in text
+    assert "Bottom line: not ready. 1 of 43 safeguards failed a test." in text
     assert "Our patients' data is walled off from every other customer's data.** This is not true today." in text
     assert "Tested by software, still needs a person" in text and "weak evidence, not proof" in text
     assert "is not a HIPAA certification" in text
@@ -123,7 +123,7 @@ def test_leader_briefs_exist_in_both_languages_and_make_no_certification_claim()
     en = open(os.path.join(ROOT, "docs", "FOR-HEALTHCARE-LEADERS.md")).read()
     es = open(os.path.join(ROOT, "docs", "PARA-LIDERES-DE-SALUD.md")).read()
     assert "It is not a HIPAA certification" in en and "No es una certificación de HIPAA" in es
-    assert "43 safeguards" in en and "43 salvaguardas" in es
+    assert "51 safeguards" in en and "51 salvaguardas" in es
     assert len(en.split()) < 450
 
 
@@ -133,9 +133,9 @@ def test_brief_demo_is_short_plain_and_true():
     lines = []
     assert demo_run.run_brief(out=lines.append) == 0
     text = "\n".join(lines)
-    assert "NOT READY. 5 of 43 safeguards failed a test:" in text
+    assert "NOT READY. 5 of 51 safeguards failed a test:" in text
     assert "All 5 now test clean, and 0 safeguards are failing." in text
-    assert "0 of 43 are confirmed" in text
+    assert "0 of 51 are confirmed" in text
     assert "Seal checks out: yes." in text and "Caught: yes." in text
     assert len(text.splitlines()) <= 26 and max(len(line) for line in text.splitlines()) <= 80
     for word in ("GATE-3", "tenant", "Merkle", "Ed25519"):

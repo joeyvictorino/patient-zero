@@ -82,6 +82,7 @@ def embedded_target(app_or_client: Any, token_a: str, token_b: str, **sections: 
         "authorized": True,                 # it is your own application, in your own process
         "synthetic_data_only": True,
         "authorization_ref": "embedded: in-process test of the caller's own application",
+        "authorized_hosts": ["embedded.invalid"],
         "base_url": "http://embedded.invalid",
         "tenants": {"a": {"token": token_a}, "b": {"token": token_b}},
         "_transport": transport_for(app_or_client),

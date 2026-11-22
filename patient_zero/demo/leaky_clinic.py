@@ -87,6 +87,7 @@ def target_for(server):
         "authorized": True,
         "authorization_ref": "unit test",
         "synthetic_data_only": True,
+        "authorized_hosts": ["127.0.0.1"],
         "base_url": f"http://127.0.0.1:{server.server_address[1]}",
         "tenants": {"a": {"token": "tok-a"}, "b": {"token": "tok-b"}},
         "isolation": {

@@ -1,9 +1,11 @@
 """Dependency-free RFC 8032 Ed25519 signatures.
 
 Deterministic signing and seed-based key generation follow RFC 8032. Python big
-integers are not constant-time: this is fine for verifying, and for signing on
-a machine you control. For signing where an attacker can time the process, use
-an audited hardware or OS key service. Private seeds never enter a seal.
+integers are not constant-time: this is fine for verifying, where everything is
+public. For signing, `sign` uses the audited `cryptography` package (OpenSSL)
+whenever it is installed (`pip install "patient-zero[sign]"`) and falls back to
+the code in this file when it is not. Both produce the same bytes, and a test
+holds them to that. Private seeds never enter a seal.
 """
 from __future__ import annotations
 
@@ -90,10 +92,29 @@ def generate_keypair(seed: bytes | None = None) -> tuple[str, str]:
     return seed.hex(), _encode(_multiply(_BASE, scalar)).hex()
 
 
-def sign(payload: bytes, private_key: str) -> str:
+def _audited_sign(seed: bytes, payload: bytes):
+    """Sign with the `cryptography` package (OpenSSL, constant-time) when it is installed. None when it is not."""
+    try:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    except Exception:  # not installed, or a build without Ed25519
+        return None
+    return Ed25519PrivateKey.from_private_bytes(seed).sign(payload).hex()
+
+
+def backend() -> str:
+    """Which code signs: 'cryptography' (audited, constant-time) or 'pure-python' (the fallback in this file)."""
+    return "pure-python" if _audited_sign(bytes(32), b"") is None else "cryptography"
+
+
+def sign(payload: bytes, private_key: str, pure: bool = False) -> str:
+    """Ed25519 is deterministic, so both backends give the same signature for the same key and message."""
     seed = bytes.fromhex(private_key)
     if len(seed) != 32:
         raise ValueError("Ed25519 private seed must have 32 bytes")
+    if not pure:
+        audited = _audited_sign(seed, payload)
+        if audited is not None:
+            return audited
     scalar, prefix = _secret_scalar(seed)
     public = _encode(_multiply(_BASE, scalar))
     r = int.from_bytes(sha512(prefix + payload).digest(), "little") % _L
